@@ -82,6 +82,11 @@ export default function HomePage() {
               Datasets
             </button>
           </Link>
+          <Link href="/dashboards">
+            <button className="btn-ghost" style={{ fontSize: 13 }}>
+              Dashboards
+            </button>
+          </Link>
           <Link href="/chat">
             <button className="btn-primary" style={{ fontSize: 13 }}>
               Start Analyzing →

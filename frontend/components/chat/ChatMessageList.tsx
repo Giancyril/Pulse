@@ -3,6 +3,7 @@
 import React from "react";
 import SqlCodeViewer from "./SqlCodeViewer";
 import QueryResultTable from "./QueryResultTable";
+import ChartCard from "@/components/charts/ChartCard";
 import type { ChatMessage } from "@/types/chat";
 
 interface ChatMessageListProps {
@@ -83,6 +84,18 @@ export default function ChatMessageList({ messages, onPinChart }: ChatMessageLis
               >
                 💡 <strong>Business Insight:</strong> {msg.insight}
               </div>
+            )}
+
+            {/* Dynamic chart visualization */}
+            {msg.chart_spec?.recommended && msg.rows && msg.rows.length > 0 && msg.columns && (
+              <ChartCard
+                title={msg.chart_spec.title || "Visualization"}
+                chartSpec={msg.chart_spec}
+                rows={msg.rows}
+                columns={msg.columns}
+                insight={msg.insight}
+                sql={msg.generated_sql}
+              />
             )}
 
             {/* Data result table */}
