@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { BarChart3, Bookmark, ArrowRight } from "lucide-react";
+import { Bookmark, ArrowRight } from "lucide-react";
 import { api } from "@/lib/api-client";
 import ChartCard from "@/components/charts/ChartCard";
 import type { Dashboard } from "@/types/dashboard";
@@ -44,23 +44,17 @@ export default function DashboardsPage() {
       >
         <Link href="/" style={{ textDecoration: "none" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div
+
+            <span
               style={{
-                width: 28,
-                height: 28,
-                borderRadius: "var(--radius-sm)",
-                background: "var(--accent-dim)",
-                border: "1px solid var(--accent-border)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "var(--accent)",
+                fontWeight: 700,
+                fontSize: 15,
+                color: "var(--text-primary)",
+                letterSpacing: "0.25em",
+                textTransform: "uppercase",
               }}
             >
-              <BarChart3 size={16} />
-            </div>
-            <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>
-              AI Data Analyst
+              Pulse
             </span>
           </div>
         </Link>

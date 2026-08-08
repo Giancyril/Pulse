@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "AI Data Analyst — Natural Language Business Intelligence",
+  title: "Pulse — Natural Language Business Intelligence",
   description:
     "Chat with your spreadsheets and databases. Generate SQL, visualize data, and surface business insights instantly.",
   keywords: ["AI", "data analyst", "SQL", "dashboard", "business intelligence"],

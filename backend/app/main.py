@@ -9,11 +9,11 @@ from app.api.v1.api import api_router
 from app.api.v1.endpoints.health import router as health_router
 
 app = FastAPI(
-    title=settings.PROJECT_NAME,
-    version=settings.VERSION,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json",
-    docs_url="/docs",
-    redoc_url="/redoc",
+    title="Pulse API",
+    description="Natural Language Business Intelligence & SQL Analytics Platform",
+    version="1.0.0",
+    docs_url="/api/v1/docs",
+    openapi_url="/api/v1/openapi.json",
 )
 
 # CORS middleware configuration

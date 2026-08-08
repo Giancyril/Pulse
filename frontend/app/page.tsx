@@ -123,7 +123,7 @@ export default function HomePage() {
           }}
         >
           Connect spreadsheets or SQL databases and query your data in natural language.
-          Generates read-only SQL, executes safely, and visualizes insights instantly.
+          Generates read-only SQL and visualizes insights instantly.
         </p>
 
         <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
@@ -204,7 +204,7 @@ export default function HomePage() {
           textAlign: "center",
         }}
       >
-        AI Data Analyst · Enterprise Natural Language Business Intelligence
+        Pulse · Enterprise Natural Language Business Intelligence
       </p>
     </div>
   );

@@ -49,7 +49,7 @@ export default function ChatMessageList({ messages }: ChatMessageListProps) {
                 <Bot size={15} />
               </div>
               <span style={{ fontWeight: 600, fontSize: 13, color: "var(--accent)" }}>
-                AI Data Analyst
+                PULSE
               </span>
             </div>
 

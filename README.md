@@ -1,4 +1,4 @@
-# AI Data Analyst
+# Pulse
 
 A production-grade, full-stack **Natural Language Business Intelligence** platform. Chat with spreadsheets and PostgreSQL databases in plain English — the AI generates validated SQL, executes it safely, visualizes results with auto-selected charts, and surfaces proactive business insights.
 
