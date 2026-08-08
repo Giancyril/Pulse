@@ -1,35 +1,36 @@
 import Link from "next/link";
+import { MessageSquare, BarChart3, Sparkles, Database, ShieldCheck, Bookmark } from "lucide-react";
 
 const FEATURES = [
   {
-    icon: "💬",
-    title: "Natural Language Chat",
-    desc: "Ask questions in plain English — the AI generates and runs the SQL for you.",
+    icon: MessageSquare,
+    title: "Natural Language Interface",
+    desc: "Ask business questions in plain text. The system translates intent into optimized SQL queries.",
   },
   {
-    icon: "📊",
-    title: "Instant Visualizations",
-    desc: "Bar, line, pie, scatter charts auto-selected based on your data shape.",
+    icon: BarChart3,
+    title: "Automated Visualizations",
+    desc: "Bar, line, area, pie, and scatter charts dynamically selected based on query data shape.",
   },
   {
-    icon: "🧠",
-    title: "Business Insights",
-    desc: "Proactive trend detection, anomaly flags, and month-over-month comparisons.",
+    icon: Sparkles,
+    title: "Proactive Business Insights",
+    desc: "Automated anomaly detection, trend summaries, and key distribution highlights.",
   },
   {
-    icon: "🗄️",
-    title: "Any Data Source",
-    desc: "Upload CSV/XLSX spreadsheets or connect directly to a PostgreSQL database.",
+    icon: Database,
+    title: "Multi-Source Data Ingestion",
+    desc: "Upload CSV/XLSX spreadsheets or connect directly to external PostgreSQL databases.",
   },
   {
-    icon: "🔒",
-    title: "Read-Only Safety",
-    desc: "All generated SQL is validated and sandboxed — no destructive operations ever.",
+    icon: ShieldCheck,
+    title: "Read-Only Security Guardrails",
+    desc: "AST parsing guarantees non-destructive SELECT operations with automatic row limits.",
   },
   {
-    icon: "📌",
-    title: "Saved Dashboards",
-    desc: "Pin any generated chart into a persistent BI dashboard board.",
+    icon: Bookmark,
+    title: "Saved BI Dashboards",
+    desc: "Pin query charts to persistent analytics dashboards with live data re-execution.",
   },
 ];
 
@@ -43,10 +44,9 @@ export default function HomePage() {
         alignItems: "center",
         justifyContent: "center",
         padding: "48px 24px",
-        fontFamily: "var(--font-sans)",
       }}
     >
-      {/* Header */}
+      {/* Header Bar */}
       <nav
         style={{
           position: "fixed",
@@ -56,24 +56,25 @@ export default function HomePage() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "14px 32px",
+          padding: "14px 36px",
           borderBottom: "1px solid var(--border)",
-          background: "rgba(9,9,11,0.85)",
+          background: "var(--surface-glass)",
           backdropFilter: "blur(12px)",
           zIndex: 50,
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: 22 }}>📊</span>
+
           <span
             style={{
               fontWeight: 700,
               fontSize: 15,
-              color: "var(--text-1)",
-              letterSpacing: "0.02em",
+              color: "var(--text-primary)",
+              letterSpacing: "0.25em",
+              textTransform: "uppercase",
             }}
           >
-            AI Data Analyst
+            Pulse
           </span>
         </div>
         <div style={{ display: "flex", gap: 10 }}>
@@ -89,122 +90,121 @@ export default function HomePage() {
           </Link>
           <Link href="/chat">
             <button className="btn-primary" style={{ fontSize: 13 }}>
-              Start Analyzing →
+              Start Analyzing
             </button>
           </Link>
         </div>
       </nav>
 
-      {/* Hero */}
-      <div style={{ textAlign: "center", marginTop: 80, maxWidth: 680 }}>
-        <div
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 6,
-            padding: "5px 14px",
-            borderRadius: 99,
-            border: "1px solid rgba(6,182,212,0.3)",
-            background: "rgba(6,182,212,0.08)",
-            fontSize: 12,
-            color: "var(--accent)",
-            fontWeight: 600,
-            marginBottom: 24,
-          }}
-        >
-          ✦ Powered by Google Gemini
-        </div>
+      {/* Hero Section */}
+      <div style={{ textAlign: "center", marginTop: 96, maxWidth: 720 }}>
 
         <h1
           className="text-gradient"
           style={{
-            fontSize: "clamp(2rem, 5vw, 3.25rem)",
+            fontSize: "clamp(2.2rem, 5vw, 3.5rem)",
             fontWeight: 800,
             lineHeight: 1.1,
             marginBottom: 20,
+            letterSpacing: "-0.02em",
           }}
         >
-          Chat with Your Data.
-          <br />
-          Get Real Answers.
+          Conversational Analytics for Modern Teams
         </h1>
 
         <p
           style={{
             fontSize: 16,
-            color: "var(--text-2)",
+            color: "var(--text-secondary)",
             lineHeight: 1.7,
             marginBottom: 36,
-            maxWidth: 540,
+            maxWidth: 580,
             margin: "0 auto 36px",
           }}
         >
-          Upload a spreadsheet or connect a database and ask questions in plain
-          English. The AI generates SQL, runs it safely, and visualizes the
-          results — instantly.
+          Connect spreadsheets or SQL databases and query your data in natural language.
+          Generates read-only SQL, executes safely, and visualizes insights instantly.
         </p>
 
         <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
           <Link href="/chat">
             <button
               className="btn-primary"
-              style={{ padding: "11px 28px", fontSize: 15 }}
+              style={{ padding: "11px 28px", fontSize: 14 }}
             >
-              Start Analyzing →
+              Open Query Explorer
             </button>
           </Link>
           <Link href="/datasets">
             <button
               className="btn-ghost"
-              style={{ padding: "11px 28px", fontSize: 15 }}
+              style={{ padding: "11px 28px", fontSize: 14 }}
             >
-              Connect a Dataset
+              Connect Dataset
             </button>
           </Link>
         </div>
       </div>
 
-      {/* Feature grid */}
+      {/* Feature Grid */}
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
           gap: 20,
-          maxWidth: 900,
+          maxWidth: 960,
           width: "100%",
-          marginTop: 72,
+          marginTop: 80,
         }}
       >
-        {FEATURES.map((f) => (
-          <div key={f.title} className="card">
-            <div style={{ fontSize: 28, marginBottom: 12 }}>{f.icon}</div>
-            <h3
-              style={{
-                fontSize: 15,
-                fontWeight: 700,
-                color: "var(--text-1)",
-                marginBottom: 6,
-              }}
-            >
-              {f.title}
-            </h3>
-            <p style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.6 }}>
-              {f.desc}
-            </p>
-          </div>
-        ))}
+        {FEATURES.map((f) => {
+          const IconComp = f.icon;
+          return (
+            <div key={f.title} className="card">
+              <div
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: "var(--radius-sm)",
+                  background: "var(--surface-hover)",
+                  border: "1px solid var(--border)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "var(--accent)",
+                  marginBottom: 16,
+                }}
+              >
+                <IconComp size={18} />
+              </div>
+              <h3
+                style={{
+                  fontSize: 15,
+                  fontWeight: 600,
+                  color: "var(--text-primary)",
+                  marginBottom: 8,
+                }}
+              >
+                {f.title}
+              </h3>
+              <p style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.6, margin: 0 }}>
+                {f.desc}
+              </p>
+            </div>
+          );
+        })}
       </div>
 
       {/* Footer */}
       <p
         style={{
-          marginTop: 64,
+          marginTop: 80,
           fontSize: 12,
-          color: "var(--text-3)",
+          color: "var(--text-muted)",
           textAlign: "center",
         }}
       >
-        AI Data Analyst · Built with Next.js, FastAPI &amp; Google Gemini
+        AI Data Analyst · Enterprise Natural Language Business Intelligence
       </p>
     </div>
   );

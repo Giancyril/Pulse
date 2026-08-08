@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { BarChart3, Bookmark, ArrowRight } from "lucide-react";
 import { api } from "@/lib/api-client";
 import ChartCard from "@/components/charts/ChartCard";
 import type { Dashboard } from "@/types/dashboard";
@@ -30,7 +31,7 @@ export default function DashboardsPage() {
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-      {/* Nav */}
+      {/* Navigation Bar */}
       <nav
         style={{
           display: "flex",
@@ -43,8 +44,22 @@ export default function DashboardsPage() {
       >
         <Link href="/" style={{ textDecoration: "none" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontSize: 20 }}>📊</span>
-            <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-1)" }}>
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: "var(--radius-sm)",
+                background: "var(--accent-dim)",
+                border: "1px solid var(--accent-border)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--accent)",
+              }}
+            >
+              <BarChart3 size={16} />
+            </div>
+            <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>
               AI Data Analyst
             </span>
           </div>
@@ -52,40 +67,42 @@ export default function DashboardsPage() {
         <div style={{ display: "flex", gap: 10 }}>
           <Link href="/chat">
             <button className="btn-primary" style={{ fontSize: 13 }}>
-              Open Chat Explorer →
+              <span>Open Query Explorer</span>
+              <ArrowRight size={14} />
             </button>
           </Link>
         </div>
       </nav>
 
-      {/* Content */}
+      {/* Main Content */}
       <div style={{ flex: 1, padding: "32px", maxWidth: 1200, margin: "0 auto", width: "100%" }}>
         <div style={{ marginBottom: 28 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: "var(--text-1)", marginBottom: 6 }}>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: "var(--text-primary)", marginBottom: 6 }}>
             Saved Dashboards
           </h1>
-          <p style={{ color: "var(--text-2)", fontSize: 14 }}>
-            Charts pinned from the AI Chat Explorer. Live data re-executed on each load.
+          <p style={{ color: "var(--text-secondary)", fontSize: 14 }}>
+            Pinned visualizations from the Query Explorer. Live query data re-executed on page load.
           </p>
         </div>
 
         {isLoading ? (
-          <p style={{ color: "var(--text-3)", fontSize: 14 }}>Loading dashboards...</p>
+          <p style={{ color: "var(--text-muted)", fontSize: 14 }}>Loading dashboards...</p>
         ) : dashboards.length === 0 ? (
           <div
             className="card"
             style={{ textAlign: "center", padding: "64px 24px" }}
           >
-            <div style={{ fontSize: 40, marginBottom: 16 }}>📌</div>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--text-1)", marginBottom: 8 }}>
-              No Dashboards Yet
+
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--text-primary)", marginBottom: 8 }}>
+              No Dashboards Pinned
             </h2>
-            <p style={{ fontSize: 14, color: "var(--text-2)", marginBottom: 24 }}>
-              Pin charts from the Chat Explorer to build your first dashboard.
+            <p style={{ fontSize: 14, color: "var(--text-secondary)", marginBottom: 24 }}>
+              Pin chart recommendations from the Chat Query Explorer to build your custom analytics board.
             </p>
             <Link href="/chat">
               <button className="btn-primary" style={{ fontSize: 14 }}>
-                Open Chat Explorer →
+                <span>Open Query Explorer</span>
+                <ArrowRight size={14} />
               </button>
             </Link>
           </div>
@@ -93,7 +110,7 @@ export default function DashboardsPage() {
           <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", gap: 24 }}>
             {/* Sidebar */}
             <div className="card" style={{ padding: 16, alignSelf: "start" }}>
-              <h3 style={{ fontSize: 12, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12 }}>
+              <h3 style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12 }}>
                 Dashboards
               </h3>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -103,18 +120,18 @@ export default function DashboardsPage() {
                     onClick={() => setSelectedId(d.id)}
                     style={{
                       padding: "8px 12px",
-                      borderRadius: "var(--radius)",
-                      background: selectedId === d.id ? "var(--accent-dim)" : "var(--surface-2)",
-                      border: `1px solid ${selectedId === d.id ? "var(--accent)" : "var(--border)"}`,
+                      borderRadius: "var(--radius-sm)",
+                      background: selectedId === d.id ? "var(--accent-dim)" : "var(--surface-hover)",
+                      border: `1px solid ${selectedId === d.id ? "var(--accent-border)" : "var(--border)"}`,
                       cursor: "pointer",
                       fontSize: 13,
                       fontWeight: selectedId === d.id ? 600 : 400,
-                      color: "var(--text-1)",
+                      color: selectedId === d.id ? "var(--accent)" : "var(--text-primary)",
                       transition: "all 0.15s ease",
                     }}
                   >
                     {d.name}
-                    <p style={{ fontSize: 11, color: "var(--text-3)", margin: "2px 0 0" }}>
+                    <p style={{ fontSize: 11, color: "var(--text-muted)", margin: "2px 0 0" }}>
                       {d.cards?.length || 0} cards
                     </p>
                   </div>
@@ -127,11 +144,11 @@ export default function DashboardsPage() {
               {activeDash && (
                 <>
                   <div style={{ marginBottom: 20 }}>
-                    <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--text-1)" }}>
+                    <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--text-primary)" }}>
                       {activeDash.name}
                     </h2>
                     {activeDash.description && (
-                      <p style={{ fontSize: 13, color: "var(--text-2)", marginTop: 4 }}>
+                      <p style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 4 }}>
                         {activeDash.description}
                       </p>
                     )}

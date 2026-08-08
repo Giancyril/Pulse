@@ -1,16 +1,17 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { Check, Loader2, Circle, Zap } from "lucide-react";
 
 interface PipelineLoaderProps {
   stage: "thinking" | "generating_sql" | "executing" | "rendering" | "done";
 }
 
 const STAGES = [
-  { key: "thinking", label: "Understanding natural language intent..." },
+  { key: "thinking", label: "Analyzing natural language query intent..." },
   { key: "generating_sql", label: "Generating PostgreSQL query via Gemini..." },
-  { key: "executing", label: "Validating AST & executing read-only query..." },
-  { key: "rendering", label: "Structuring results & chart specification..." },
+  { key: "executing", label: "Validating AST guardrails & executing SELECT..." },
+  { key: "rendering", label: "Structuring tabular output & chart spec..." },
 ];
 
 export default function PipelineLoader({ stage }: PipelineLoaderProps) {
@@ -32,12 +33,12 @@ export default function PipelineLoader({ stage }: PipelineLoaderProps) {
         border: "1px solid var(--border)",
         display: "flex",
         flexDirection: "column",
-        gap: 10,
+        gap: 12,
         margin: "12px 0",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <span style={{ fontSize: 14 }}>⚡</span>
+        <Zap size={15} style={{ color: "var(--accent)" }} />
         <span style={{ fontWeight: 600, fontSize: 13, color: "var(--accent)" }}>
           Pipeline Processing
         </span>
@@ -59,23 +60,22 @@ export default function PipelineLoader({ stage }: PipelineLoaderProps) {
                 color: isDone
                   ? "var(--success)"
                   : isActive
-                  ? "var(--text-1)"
-                  : "var(--text-3)",
+                  ? "var(--text-primary)"
+                  : "var(--text-muted)",
                 fontWeight: isActive ? 600 : 400,
                 transition: "color 0.2s ease",
               }}
             >
-              <span style={{ fontSize: 12, width: 16, textAlign: "center" }}>
-                {isDone ? "✓" : isActive ? "⏳" : "○"}
-              </span>
+              <div style={{ width: 16, display: "flex", justifyContent: "center" }}>
+                {isDone ? (
+                  <Check size={14} style={{ color: "var(--success)" }} />
+                ) : isActive ? (
+                  <Loader2 size={13} className="animate-spin" style={{ color: "var(--accent)" }} />
+                ) : (
+                  <Circle size={10} style={{ opacity: 0.4 }} />
+                )}
+              </div>
               <span>{s.label}</span>
-              {isActive && (
-                <span style={{ display: "inline-flex", gap: 2 }}>
-                  <span className="typing-dot" />
-                  <span className="typing-dot" />
-                  <span className="typing-dot" />
-                </span>
-              )}
             </div>
           );
         })}

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { BarChart3, Database, Upload, Plus, ArrowRight, Table, Server } from "lucide-react";
 import FileUploadZone from "@/components/datasets/FileUploadZone";
 import DbConnectModal from "@/components/datasets/DbConnectModal";
 import { api } from "@/lib/api-client";
@@ -22,7 +23,7 @@ export default function DatasetsPage() {
         setSelectedDataset(data[0]);
       }
     } catch {
-      // Backend empty or offline
+      // Backend offline
     } finally {
       setIsLoading(false);
     }
@@ -42,7 +43,7 @@ export default function DatasetsPage() {
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-      {/* Navigation Header */}
+      {/* Navigation Bar */}
       <nav
         style={{
           display: "flex",
@@ -55,8 +56,22 @@ export default function DatasetsPage() {
       >
         <Link href="/" style={{ textDecoration: "none" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontSize: 20 }}>📊</span>
-            <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-1)" }}>
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: "var(--radius-sm)",
+                background: "var(--accent-dim)",
+                border: "1px solid var(--accent-border)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--accent)",
+              }}
+            >
+              <BarChart3 size={16} />
+            </div>
+            <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>
               AI Data Analyst
             </span>
           </div>
@@ -67,11 +82,13 @@ export default function DatasetsPage() {
             className="btn-ghost"
             style={{ fontSize: 13 }}
           >
-            🔌 Connect SQL Database
+            <Server size={14} />
+            <span>Connect Database</span>
           </button>
           <Link href="/chat">
             <button className="btn-primary" style={{ fontSize: 13 }}>
-              Open Chat Explorer →
+              <span>Open Query Explorer</span>
+              <ArrowRight size={14} />
             </button>
           </Link>
         </div>
@@ -80,11 +97,11 @@ export default function DatasetsPage() {
       {/* Main Content */}
       <div style={{ flex: 1, padding: "32px", maxWidth: 1200, margin: "0 auto", width: "100%" }}>
         <div style={{ marginBottom: 28 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: "var(--text-1)", marginBottom: 6 }}>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: "var(--text-primary)", marginBottom: 6 }}>
             Dataset &amp; Schema Manager
           </h1>
-          <p style={{ color: "var(--text-2)", fontSize: 14 }}>
-            Upload CSV/XLSX spreadsheets or connect PostgreSQL databases for AI analysis.
+          <p style={{ color: "var(--text-secondary)", fontSize: 14 }}>
+            Upload CSV/XLSX spreadsheets or connect PostgreSQL databases for natural language querying.
           </p>
         </div>
 
@@ -95,13 +112,13 @@ export default function DatasetsPage() {
 
         {/* Datasets List & Schema Inspector */}
         <div style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: 24 }}>
-          {/* Datasets Sidebar */}
-          <div className="card" style={{ padding: 16 }}>
+          {/* Active Datasets Sidebar */}
+          <div className="card" style={{ padding: 18, alignSelf: "start" }}>
             <h3
               style={{
-                fontSize: 13,
+                fontSize: 11,
                 fontWeight: 700,
-                color: "var(--text-3)",
+                color: "var(--text-muted)",
                 textTransform: "uppercase",
                 letterSpacing: "0.05em",
                 marginBottom: 14,
@@ -111,10 +128,10 @@ export default function DatasetsPage() {
             </h3>
 
             {isLoading ? (
-              <p style={{ fontSize: 13, color: "var(--text-3)" }}>Loading datasets...</p>
+              <p style={{ fontSize: 13, color: "var(--text-muted)" }}>Loading datasets...</p>
             ) : datasets.length === 0 ? (
-              <p style={{ fontSize: 13, color: "var(--text-3)", fontStyle: "italic" }}>
-                No datasets uploaded yet. Upload a CSV/XLSX above to get started.
+              <p style={{ fontSize: 13, color: "var(--text-muted)", fontStyle: "italic" }}>
+                No datasets connected. Upload a spreadsheet above to begin.
               </p>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -126,22 +143,22 @@ export default function DatasetsPage() {
                       onClick={() => setSelectedDataset(ds)}
                       style={{
                         padding: "10px 14px",
-                        borderRadius: "var(--radius)",
-                        background: isSelected ? "var(--accent-dim)" : "var(--surface-2)",
-                        border: `1px solid ${isSelected ? "var(--accent)" : "var(--border)"}`,
+                        borderRadius: "var(--radius-sm)",
+                        background: isSelected ? "var(--accent-dim)" : "var(--surface-hover)",
+                        border: `1px solid ${isSelected ? "var(--accent-border)" : "var(--border)"}`,
                         cursor: "pointer",
                         transition: "all 0.15s ease",
                       }}
                     >
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <span style={{ fontWeight: 600, fontSize: 13, color: "var(--text-1)" }}>
+                        <span style={{ fontWeight: 600, fontSize: 13, color: isSelected ? "var(--accent)" : "var(--text-primary)" }}>
                           {ds.name}
                         </span>
-                        <span className="badge" style={{ fontSize: 10, background: "var(--surface-3)" }}>
+                        <span className="badge" style={{ fontSize: 10 }}>
                           {ds.source}
                         </span>
                       </div>
-                      <p style={{ fontSize: 11, color: "var(--text-3)", marginTop: 4 }}>
+                      <p style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4, margin: "4px 0 0" }}>
                         {formatNumber(ds.tables[0]?.row_count || 0)} rows · {ds.tables[0]?.columns.length || 0} columns
                       </p>
                     </div>
@@ -166,21 +183,22 @@ export default function DatasetsPage() {
                   }}
                 >
                   <div>
-                    <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--text-1)" }}>
+                    <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--text-primary)" }}>
                       {selectedDataset.name}
                     </h2>
-                    <p style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2, fontFamily: "var(--font-mono)" }}>
-                      SQL Table Name: {selectedDataset.tables[0]?.name}
+                    <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2, fontFamily: "var(--font-mono)" }}>
+                      SQL Table: {selectedDataset.tables[0]?.name}
                     </p>
                   </div>
                   <Link href={`/chat?dataset=${selectedDataset.id}`}>
                     <button className="btn-primary" style={{ fontSize: 13 }}>
-                      Query with AI →
+                      <span>Query with AI</span>
+                      <ArrowRight size={14} />
                     </button>
                   </Link>
                 </div>
 
-                <h4 style={{ fontSize: 13, fontWeight: 600, color: "var(--text-2)", marginBottom: 12 }}>
+                <h4 style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 12 }}>
                   Inferred Schema Columns ({selectedDataset.tables[0]?.columns.length || 0})
                 </h4>
 
@@ -194,7 +212,7 @@ export default function DatasetsPage() {
                     }}
                   >
                     <thead>
-                      <tr style={{ borderBottom: "1px solid var(--border)", color: "var(--text-3)" }}>
+                      <tr style={{ borderBottom: "1px solid var(--border)", color: "var(--text-muted)" }}>
                         <th style={{ padding: "8px 12px" }}>Column Name</th>
                         <th style={{ padding: "8px 12px" }}>Data Type</th>
                         <th style={{ padding: "8px 12px" }}>Nullable</th>
@@ -205,27 +223,18 @@ export default function DatasetsPage() {
                         <tr
                           key={col.name}
                           style={{
-                            borderBottom: "1px solid rgba(255,255,255,0.04)",
+                            borderBottom: "1px solid rgba(255,255,255,0.03)",
                           }}
                         >
                           <td style={{ padding: "10px 12px", fontFamily: "var(--font-mono)", color: "var(--accent)" }}>
                             {col.name}
                           </td>
                           <td style={{ padding: "10px 12px" }}>
-                            <span
-                              style={{
-                                padding: "2px 6px",
-                                borderRadius: 4,
-                                background: "var(--surface-3)",
-                                fontSize: 11,
-                                fontFamily: "var(--font-mono)",
-                                color: "var(--text-2)",
-                              }}
-                            >
+                            <span className="badge">
                               {col.type}
                             </span>
                           </td>
-                          <td style={{ padding: "10px 12px", color: "var(--text-3)" }}>
+                          <td style={{ padding: "10px 12px", color: "var(--text-muted)" }}>
                             {col.nullable ? "Yes" : "No"}
                           </td>
                         </tr>
@@ -235,8 +244,11 @@ export default function DatasetsPage() {
                 </div>
               </div>
             ) : (
-              <div style={{ padding: "48px 0", textAlign: "center", color: "var(--text-3)" }}>
-                Select a dataset on the left to inspect its schema columns and data types.
+              <div style={{ padding: "64px 0", textAlign: "center", color: "var(--text-muted)" }}>
+                <Table size={32} style={{ margin: "0 auto 12px", opacity: 0.4 }} />
+                <p style={{ margin: 0, fontSize: 13 }}>
+                  Select a dataset on the left to inspect its schema columns and data types.
+                </p>
               </div>
             )}
           </div>

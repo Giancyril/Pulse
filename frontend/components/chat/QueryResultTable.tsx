@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface QueryResultTableProps {
   columns: string[];
@@ -15,17 +16,16 @@ export default function QueryResultTable({ columns, rows }: QueryResultTableProp
     return (
       <div
         style={{
-          padding: 16,
+          padding: "14px 16px",
           fontSize: 12,
-          color: "var(--text-3)",
-          fontStyle: "italic",
+          color: "var(--text-muted)",
           border: "1px solid var(--border)",
-          borderRadius: "var(--radius)",
-          background: "var(--surface-2)",
+          borderRadius: "var(--radius-sm)",
+          background: "var(--surface-hover)",
           margin: "10px 0",
         }}
       >
-        Query executed successfully. 0 rows returned.
+        Query executed successfully. 0 records returned.
       </div>
     );
   }
@@ -34,13 +34,13 @@ export default function QueryResultTable({ columns, rows }: QueryResultTableProp
   const pagedRows = rows.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
-    <div style={{ margin: "12px 0", borderRadius: "var(--radius)", border: "1px solid var(--border)", overflow: "hidden" }}>
+    <div style={{ margin: "12px 0", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)", overflow: "hidden" }}>
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, textAlign: "left" }}>
           <thead>
-            <tr style={{ background: "var(--surface-3)", borderBottom: "1px solid var(--border)", color: "var(--text-2)" }}>
+            <tr style={{ background: "var(--surface-hover)", borderBottom: "1px solid var(--border)", color: "var(--text-secondary)" }}>
               {columns.map((col) => (
-                <th key={col} style={{ padding: "8px 12px", fontFamily: "var(--font-mono)", fontWeight: 600 }}>
+                <th key={col} style={{ padding: "9px 12px", fontFamily: "var(--font-mono)", fontWeight: 600 }}>
                   {col}
                 </th>
               ))}
@@ -52,9 +52,9 @@ export default function QueryResultTable({ columns, rows }: QueryResultTableProp
                 {columns.map((col) => {
                   const val = row[col];
                   return (
-                    <td key={col} style={{ padding: "8px 12px", color: "var(--text-1)" }}>
+                    <td key={col} style={{ padding: "8px 12px", color: "var(--text-primary)" }}>
                       {val === null || val === undefined ? (
-                        <span style={{ color: "var(--text-3)", fontStyle: "italic" }}>null</span>
+                        <span style={{ color: "var(--text-muted)", fontStyle: "italic" }}>null</span>
                       ) : (
                         String(val)
                       )}
@@ -67,24 +67,24 @@ export default function QueryResultTable({ columns, rows }: QueryResultTableProp
         </table>
       </div>
 
-      {/* Pagination bar */}
+      {/* Pagination Bar */}
       {totalPages > 1 && (
         <div
           style={{
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            padding: "6px 14px",
+            padding: "8px 14px",
             background: "var(--surface)",
             borderTop: "1px solid var(--border)",
             fontSize: 11,
-            color: "var(--text-3)",
+            color: "var(--text-muted)",
           }}
         >
           <span>
-            Showing {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, rows.length)} of {rows.length} rows
+            Showing {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, rows.length)} of {rows.length} records
           </span>
-          <div style={{ display: "flex", gap: 6 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <button
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((p) => p - 1)}
@@ -92,14 +92,18 @@ export default function QueryResultTable({ columns, rows }: QueryResultTableProp
                 background: "transparent",
                 border: "1px solid var(--border)",
                 borderRadius: 4,
-                padding: "2px 8px",
-                color: currentPage === 1 ? "var(--text-3)" : "var(--text-1)",
+                padding: "3px 8px",
+                color: currentPage === 1 ? "var(--text-muted)" : "var(--text-primary)",
                 cursor: currentPage === 1 ? "not-allowed" : "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
               }}
             >
-              ← Prev
+              <ChevronLeft size={12} />
+              <span>Previous</span>
             </button>
-            <span>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 11 }}>
               {currentPage} / {totalPages}
             </span>
             <button
@@ -109,12 +113,16 @@ export default function QueryResultTable({ columns, rows }: QueryResultTableProp
                 background: "transparent",
                 border: "1px solid var(--border)",
                 borderRadius: 4,
-                padding: "2px 8px",
-                color: currentPage === totalPages ? "var(--text-3)" : "var(--text-1)",
+                padding: "3px 8px",
+                color: currentPage === totalPages ? "var(--text-muted)" : "var(--text-primary)",
                 cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
               }}
             >
-              Next →
+              <span>Next</span>
+              <ChevronRight size={12} />
             </button>
           </div>
         </div>

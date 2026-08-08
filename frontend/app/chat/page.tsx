@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { BarChart3, Database, Send, Sparkles, MessageSquare, Plus, CheckCircle2 } from "lucide-react";
 import { api } from "@/lib/api-client";
 import ChatMessageList from "@/components/chat/ChatMessageList";
 import PipelineLoader from "@/components/shared/PipelineLoader";
@@ -27,7 +28,7 @@ export default function ChatPage() {
           setSelectedDatasetId(data[0].id);
         }
       } catch {
-        // Backend not running
+        // Backend offline
       }
     }
     loadDatasets();
@@ -72,7 +73,7 @@ export default function ChatPage() {
       const aiMsg: ChatMessage = {
         id: `msg_ai_${Date.now()}`,
         role: "assistant",
-        content: res.error ? "An error occurred while generating or executing the SQL query." : "Analysis complete.",
+        content: res.error ? "An error occurred while generating or executing the SQL query." : "Query analysis completed.",
         generated_sql: res.generated_sql,
         execution_time_ms: res.execution_time_ms,
         row_count: res.row_count,
@@ -86,11 +87,11 @@ export default function ChatPage() {
 
       setMessages((prev) => [...prev, aiMsg]);
     } catch (err: unknown) {
-      const errMsg = err instanceof Error ? err.message : "Failed to run natural language query";
+      const errMsg = err instanceof Error ? err.message : "Failed to execute natural language query";
       const errorMsgObj: ChatMessage = {
         id: `msg_err_${Date.now()}`,
         role: "assistant",
-        content: "Failed to execute request.",
+        content: "Failed to process request.",
         error: errMsg,
         timestamp: new Date().toISOString(),
       };
@@ -102,10 +103,10 @@ export default function ChatPage() {
   };
 
   const PRESET_PROMPTS = [
-    "Show total count of rows grouped by category",
-    "List top 5 records sorted by numerical value descending",
-    "Compare month over month trends",
-    "Filter records with non-null values",
+    "Show total aggregate metrics grouped by top category",
+    "List top 10 records sorted by primary numeric metric descending",
+    "Calculate distribution across groups",
+    "Filter records with complete non-null fields",
   ];
 
   return (
@@ -122,26 +123,42 @@ export default function ChatPage() {
         }}
       >
         <Link href="/" style={{ textDecoration: "none" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 20 }}>📊</span>
-            <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-1)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: "var(--radius-sm)",
+                background: "var(--accent-dim)",
+                border: "1px solid var(--accent-border)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--accent)",
+              }}
+            >
+              <BarChart3 size={16} />
+            </div>
+            <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)" }}>
               AI Data Analyst
             </span>
           </div>
         </Link>
 
-        {/* Dataset Selector in header */}
+        {/* Dataset Selector */}
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ fontSize: 12, color: "var(--text-3)" }}>Dataset:</span>
+          <span style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 500 }}>
+            Target Dataset:
+          </span>
           <select
             value={selectedDatasetId}
             onChange={(e) => setSelectedDatasetId(e.target.value)}
             style={{
               padding: "6px 12px",
-              borderRadius: "var(--radius)",
-              background: "var(--surface-2)",
+              borderRadius: "var(--radius-sm)",
+              background: "var(--surface-hover)",
               border: "1px solid var(--border)",
-              color: "var(--text-1)",
+              color: "var(--text-primary)",
               fontSize: 13,
               cursor: "pointer",
             }}
@@ -159,21 +176,22 @@ export default function ChatPage() {
 
           <Link href="/datasets">
             <button className="btn-ghost" style={{ fontSize: 12, padding: "5px 12px" }}>
-              + Manage Datasets
+              <Plus size={13} />
+              <span>Manage Datasets</span>
             </button>
           </Link>
         </div>
       </nav>
 
-      {/* Main Chat Area */}
+      {/* Main Chat Content */}
       <div style={{ flex: 1, maxWidth: 960, width: "100%", margin: "0 auto", padding: "24px", display: "flex", flexDirection: "column" }}>
-        {/* Dataset Banner */}
+        {/* Active Target Banner */}
         {activeDataset && (
           <div
             style={{
               padding: "10px 16px",
-              borderRadius: "var(--radius)",
-              background: "var(--surface-2)",
+              borderRadius: "var(--radius-sm)",
+              background: "var(--surface-hover)",
               border: "1px solid var(--border)",
               marginBottom: 20,
               display: "flex",
@@ -183,60 +201,64 @@ export default function ChatPage() {
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span>🗄️</span>
-              <span style={{ fontWeight: 600, color: "var(--text-1)" }}>Active Target: {activeDataset.name}</span>
-              <span style={{ color: "var(--text-3)", fontFamily: "var(--font-mono)" }}>
+              <Database size={14} style={{ color: "var(--accent)" }} />
+              <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>Target: {activeDataset.name}</span>
+              <span style={{ color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
                 ({activeDataset.tables[0]?.columns.length || 0} columns · {activeDataset.tables[0]?.name})
               </span>
             </div>
-            <span style={{ color: "var(--accent)" }}>Session Memory Active (Last 6 turns)</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--success)" }}>
+              <CheckCircle2 size={13} />
+              <span style={{ fontWeight: 500 }}>Session Context Active</span>
+            </div>
           </div>
         )}
 
-        {/* Zero state if no messages */}
+        {/* Empty State Prompt Guide */}
         {messages.length === 0 && (
-          <div style={{ padding: "48px 0", textAlign: "center", maxWidth: 540, margin: "0 auto" }}>
-            <span style={{ fontSize: 40 }}>💡</span>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--text-1)", marginTop: 12, marginBottom: 8 }}>
-              Ask questions in Natural Language
+          <div style={{ padding: "56px 0", textAlign: "center", maxWidth: 580, margin: "0 auto" }}>
+
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--text-primary)", marginBottom: 8 }}>
+              Natural Language Data Explorer
             </h2>
-            <p style={{ fontSize: 13, color: "var(--text-2)", marginBottom: 24, lineHeight: 1.6 }}>
-              The AI converts your questions to SQL, executes them safely against your database, and presents tabular results and insights.
+            <p style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 28, lineHeight: 1.6 }}>
+              Ask questions in plain language. The engine generates validated read-only SQL, executes against your dataset, and renders interactive charts and tabular results.
             </p>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-3)", textTransform: "uppercase" }}>
-                Try asking:
+              <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", textAlign: "left" }}>
+                Sample Prompts:
               </span>
               {PRESET_PROMPTS.map((p) => (
                 <button
                   key={p}
                   onClick={() => setPromptInput(p)}
                   className="btn-ghost"
-                  style={{ textAlign: "left", fontSize: 13, padding: "8px 14px" }}
+                  style={{ textAlign: "left", fontSize: 13, padding: "9px 14px", justifyContent: "flex-start" }}
                 >
-                  💬 {p}
+                  <MessageSquare size={13} style={{ color: "var(--accent)", flexShrink: 0 }} />
+                  <span>{p}</span>
                 </button>
               ))}
             </div>
           </div>
         )}
 
-        {/* Message Thread */}
+        {/* Messages */}
         <ChatMessageList messages={messages} />
 
-        {/* Pipeline Loader */}
+        {/* Pipeline Progress Indicator */}
         {isLoading && <PipelineLoader stage={pipelineStage} />}
 
         <div ref={bottomRef} />
       </div>
 
-      {/* Fixed Bottom Input Bar */}
+      {/* Input Bar */}
       <div
         style={{
           position: "sticky",
           bottom: 0,
-          background: "rgba(9,9,11,0.95)",
+          background: "var(--surface-glass)",
           backdropFilter: "blur(12px)",
           borderTop: "1px solid var(--border)",
           padding: "16px 24px",
@@ -258,8 +280,8 @@ export default function ChatPage() {
             onChange={(e) => setPromptInput(e.target.value)}
             placeholder={
               selectedDatasetId
-                ? "Ask a question about your data (e.g. 'Show top 5 categories by total revenue')..."
-                : "Please upload or select a dataset first..."
+                ? "Ask a question about your data (e.g. 'Show total revenue grouped by category')..."
+                : "Select or connect a dataset first..."
             }
             disabled={!selectedDatasetId || isLoading}
             style={{
@@ -267,10 +289,9 @@ export default function ChatPage() {
               padding: "12px 18px",
               borderRadius: "var(--radius-md)",
               background: "var(--surface)",
-              border: "1px solid var(--border-strong)",
-              color: "var(--text-1)",
+              border: "1px solid var(--border-medium)",
+              color: "var(--text-primary)",
               fontSize: 14,
-              outline: "none",
             }}
           />
           <button
@@ -278,12 +299,12 @@ export default function ChatPage() {
             disabled={!selectedDatasetId || !promptInput.trim() || isLoading}
             className="btn-primary"
             style={{
-              padding: "12px 24px",
+              padding: "12px 22px",
               fontSize: 14,
-              opacity: !selectedDatasetId || !promptInput.trim() || isLoading ? 0.5 : 1,
             }}
           >
-            {isLoading ? "Analyzing..." : "Ask AI →"}
+            <span>Execute</span>
+            <Send size={14} />
           </button>
         </form>
       </div>

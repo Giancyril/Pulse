@@ -1,20 +1,19 @@
 "use client";
 
 import React, { useState } from "react";
+import { ChevronDown, ChevronRight, Copy, Check, Clock, Database } from "lucide-react";
 import { formatDuration } from "@/lib/utils";
 
 interface SqlCodeViewerProps {
   sql: string;
   executionTimeMs?: number;
   rowCount?: number;
-  onEditAndRun?: (newSql: string) => void;
 }
 
 export default function SqlCodeViewer({
   sql,
   executionTimeMs,
   rowCount,
-  onEditAndRun,
 }: SqlCodeViewerProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [copied, setCopied] = useState(false);
@@ -29,7 +28,7 @@ export default function SqlCodeViewer({
     <div
       style={{
         margin: "12px 0",
-        borderRadius: "var(--radius)",
+        borderRadius: "var(--radius-sm)",
         border: "1px solid var(--border)",
         background: "#0b0f19",
         overflow: "hidden",
@@ -47,7 +46,7 @@ export default function SqlCodeViewer({
           fontSize: 12,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <button
             onClick={() => setIsExpanded(!isExpanded)}
             style={{
@@ -59,42 +58,74 @@ export default function SqlCodeViewer({
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
-              gap: 4,
+              gap: 6,
+              padding: 0,
             }}
           >
-            <span>{isExpanded ? "▼" : "▶"}</span>
+            {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
             <span>Generated SQL Query</span>
           </button>
 
           {executionTimeMs !== undefined && (
-            <span style={{ fontSize: 11, color: "var(--text-3)", fontFamily: "var(--font-mono)" }}>
-              ⏱ {formatDuration(executionTimeMs)}
+            <span
+              style={{
+                fontSize: 11,
+                color: "var(--text-muted)",
+                fontFamily: "var(--font-mono)",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+              }}
+            >
+              <Clock size={12} />
+              {formatDuration(executionTimeMs)}
             </span>
           )}
 
           {rowCount !== undefined && (
-            <span style={{ fontSize: 11, color: "var(--text-3)", fontFamily: "var(--font-mono)" }}>
-              📊 {rowCount} rows
+            <span
+              style={{
+                fontSize: 11,
+                color: "var(--text-muted)",
+                fontFamily: "var(--font-mono)",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+              }}
+            >
+              <Database size={12} />
+              {rowCount} rows
             </span>
           )}
         </div>
 
-        <div style={{ display: "flex", gap: 8 }}>
-          <button
-            onClick={handleCopy}
-            style={{
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid var(--border)",
-              borderRadius: 4,
-              padding: "3px 8px",
-              fontSize: 11,
-              color: "var(--text-2)",
-              cursor: "pointer",
-            }}
-          >
-            {copied ? "✓ Copied" : "📋 Copy SQL"}
-          </button>
-        </div>
+        <button
+          onClick={handleCopy}
+          style={{
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid var(--border)",
+            borderRadius: 4,
+            padding: "3px 8px",
+            fontSize: 11,
+            color: "var(--text-secondary)",
+            cursor: "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 4,
+          }}
+        >
+          {copied ? (
+            <>
+              <Check size={12} style={{ color: "var(--success)" }} />
+              <span>Copied</span>
+            </>
+          ) : (
+            <>
+              <Copy size={12} />
+              <span>Copy SQL</span>
+            </>
+          )}
+        </button>
       </div>
 
       {/* Code body */}

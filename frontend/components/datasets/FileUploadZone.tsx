@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
+import { Upload, FileSpreadsheet, Loader2, AlertCircle } from "lucide-react";
 import { api } from "@/lib/api-client";
 import type { UploadResponse } from "@/types/dataset";
 
@@ -61,12 +62,12 @@ export default function FileUploadZone({ onUploadSuccess }: FileUploadZoneProps)
         onClick={() => fileInputRef.current?.click()}
         style={{
           border: `2px dashed ${
-            isDragging ? "var(--accent)" : "var(--border-strong)"
+            isDragging ? "var(--accent)" : "var(--border-medium)"
           }`,
           borderRadius: "var(--radius-md)",
-          padding: "36px 24px",
+          padding: "40px 24px",
           textAlign: "center",
-          background: isDragging ? "rgba(6,182,212,0.06)" : "var(--surface-2)",
+          background: isDragging ? "var(--accent-dim)" : "var(--surface-hover)",
           cursor: "pointer",
           transition: "all 0.2s ease",
           display: "flex",
@@ -90,40 +91,39 @@ export default function FileUploadZone({ onUploadSuccess }: FileUploadZoneProps)
 
         <div
           style={{
-            fontSize: 32,
-            marginBottom: 12,
-            opacity: isUploading ? 0.4 : 1,
+            width: 44,
+            height: 44,
+            borderRadius: "var(--radius-md)",
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "var(--accent)",
+            marginBottom: 14,
           }}
         >
-          {isUploading ? "⚙️" : "📁"}
+          {isUploading ? (
+            <Loader2 size={20} className="animate-spin" />
+          ) : (
+            <Upload size={20} />
+          )}
         </div>
 
-        <p style={{ fontSize: 14, fontWeight: 600, color: "var(--text-1)", marginBottom: 4 }}>
+        <p style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)", marginBottom: 4 }}>
           {isUploading
-            ? "Parsing spreadsheet & creating SQL table..."
-            : "Drag & drop CSV or XLSX file here, or click to browse"}
+            ? "Parsing spreadsheet & inferring schema types..."
+            : "Click to upload or drag and drop spreadsheet"}
         </p>
 
-        <p style={{ fontSize: 12, color: "var(--text-3)" }}>
-          Supports .CSV and .XLSX files up to 50MB · Automatic data type inference
+        <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 16 }}>
+          Supports CSV and XLSX files up to 50MB · Automatic data type inference
         </p>
 
-        {/* Format indicators */}
-        <div style={{ display: "flex", gap: 6, marginTop: 16 }}>
-          {["CSV", "XLSX", "Auto Type Inference", "PostgreSQL Ready"].map((tag) => (
-            <span
-              key={tag}
-              style={{
-                padding: "3px 8px",
-                borderRadius: 5,
-                fontSize: 10,
-                fontFamily: "var(--font-mono)",
-                fontWeight: 600,
-                background: "var(--surface-3)",
-                color: "var(--text-3)",
-                border: "1px solid var(--border)",
-              }}
-            >
+        {/* Technical Badges */}
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
+          {["CSV", "XLSX", "Schema Inference", "SQL Ready"].map((tag) => (
+            <span key={tag} className="badge">
               {tag}
             </span>
           ))}
@@ -135,9 +135,9 @@ export default function FileUploadZone({ onUploadSuccess }: FileUploadZoneProps)
           style={{
             marginTop: 14,
             padding: "10px 14px",
-            borderRadius: "var(--radius)",
-            background: "rgba(239,68,68,0.1)",
-            border: "1px solid rgba(239,68,68,0.3)",
+            borderRadius: "var(--radius-sm)",
+            background: "var(--critical-dim)",
+            border: "1px solid rgba(239, 68, 68, 0.3)",
             color: "var(--critical)",
             fontSize: 13,
             display: "flex",
@@ -145,7 +145,7 @@ export default function FileUploadZone({ onUploadSuccess }: FileUploadZoneProps)
             gap: 8,
           }}
         >
-          <span>⚠️</span>
+          <AlertCircle size={16} />
           <span>{error}</span>
         </div>
       )}
