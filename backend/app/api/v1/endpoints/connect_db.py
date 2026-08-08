@@ -6,20 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.services.db_introspection import DbIntrospectionService
-from app.schemas.dataset import ConnectDbResponse, TableSchema, ColumnSchema
-from pydantic import BaseModel, Field
+from app.schemas.dataset import ConnectDbRequest, ConnectDbResponse, TableSchema, ColumnSchema
 
 router = APIRouter()
-
-
-class ConnectDbRequest(BaseModel):
-    name: str = Field(default="External Database")
-    host: str = Field(default="localhost")
-    port: int = Field(default=5432)
-    database: str = Field(...)
-    username: str = Field(...)
-    password: str = Field(...)
-    ssl: bool = Field(default=False)
 
 
 @router.post("/connect-db", response_model=ConnectDbResponse, status_code=status.HTTP_201_CREATED, tags=["Data Ingestion"])

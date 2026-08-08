@@ -34,3 +34,20 @@ class UploadResponse(BaseModel):
     table_name: str
     row_count: int
     columns: List[ColumnSchema]
+
+
+class ConnectDbRequest(BaseModel):
+    name: str = Field(default="External Database")
+    host: str = Field(default="localhost")
+    port: int = Field(default=5432)
+    database: str = Field(...)
+    username: str = Field(...)
+    password: str = Field(...)
+    ssl: bool = Field(default=False)
+
+
+class ConnectDbResponse(BaseModel):
+    success: bool = True
+    dataset_id: str
+    tables: List[TableSchema]
+
