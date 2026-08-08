@@ -1,8 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import { ChevronDown, ChevronRight, Copy, Check, Clock, Database } from "lucide-react";
+import { ChevronDown, ChevronRight, Copy, Check, Clock, Database, Zap, Loader2 } from "lucide-react";
 import { formatDuration } from "@/lib/utils";
+import { api } from "@/lib/api-client";
+import SqlOptimizerPanel from "./SqlOptimizerPanel";
+import type { SqlOptimizeResponse } from "@/types/optimizer";
 
 interface SqlCodeViewerProps {
   sql: string;
@@ -17,11 +20,31 @@ export default function SqlCodeViewer({
 }: SqlCodeViewerProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [optimizerData, setOptimizerData] = useState<SqlOptimizeResponse | null>(null);
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  const [showOptimizer, setShowOptimizer] = useState(false);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(sql);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleOptimize = async () => {
+    if (optimizerData) {
+      setShowOptimizer(!showOptimizer);
+      return;
+    }
+    setIsOptimizing(true);
+    try {
+      const result = await api.post<SqlOptimizeResponse>("/sql/optimize", { sql, dialect: "sqlite" });
+      setOptimizerData(result);
+      setShowOptimizer(true);
+    } catch {
+      // silent
+    } finally {
+      setIsOptimizing(false);
+    }
   };
 
   return (
@@ -99,33 +122,55 @@ export default function SqlCodeViewer({
           )}
         </div>
 
-        <button
-          onClick={handleCopy}
-          style={{
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid var(--border)",
-            borderRadius: 4,
-            padding: "3px 8px",
-            fontSize: 11,
-            color: "var(--text-secondary)",
-            cursor: "pointer",
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 4,
-          }}
-        >
-          {copied ? (
-            <>
-              <Check size={12} style={{ color: "var(--success)" }} />
-              <span>Copied</span>
-            </>
-          ) : (
-            <>
-              <Copy size={12} />
-              <span>Copy SQL</span>
-            </>
-          )}
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <button
+            onClick={handleOptimize}
+            disabled={isOptimizing}
+            style={{
+              background: showOptimizer ? "var(--accent-dim)" : "rgba(255,255,255,0.04)",
+              border: `1px solid ${showOptimizer ? "var(--accent-border)" : "var(--border)"}`,
+              borderRadius: 4,
+              padding: "3px 8px",
+              fontSize: 11,
+              color: showOptimizer ? "var(--accent)" : "var(--text-secondary)",
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+            }}
+          >
+            {isOptimizing ? <Loader2 size={12} className="animate-spin" /> : <Zap size={12} style={{ color: "var(--warning)" }} />}
+            <span>{showOptimizer ? "Hide Analysis" : "Optimize SQL"}</span>
+          </button>
+
+          <button
+            onClick={handleCopy}
+            style={{
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid var(--border)",
+              borderRadius: 4,
+              padding: "3px 8px",
+              fontSize: 11,
+              color: "var(--text-secondary)",
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+            }}
+          >
+            {copied ? (
+              <>
+                <Check size={12} style={{ color: "var(--success)" }} />
+                <span>Copied</span>
+              </>
+            ) : (
+              <>
+                <Copy size={12} />
+                <span>Copy SQL</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Code body */}
@@ -133,6 +178,13 @@ export default function SqlCodeViewer({
         <pre className="sql-block" style={{ margin: 0 }}>
           <code>{sql}</code>
         </pre>
+      )}
+
+      {/* Optimizer Panel */}
+      {showOptimizer && optimizerData && (
+        <div style={{ padding: "0 12px 12px" }}>
+          <SqlOptimizerPanel analysis={optimizerData} />
+        </div>
       )}
     </div>
   );
