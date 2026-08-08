@@ -5,6 +5,7 @@ import { Bot, Sparkles, AlertCircle } from "lucide-react";
 import SqlCodeViewer from "./SqlCodeViewer";
 import QueryResultTable from "./QueryResultTable";
 import ChartCard from "@/components/charts/ChartCard";
+import ExportButton from "@/components/shared/ExportButton";
 import type { ChatMessage } from "@/types/chat";
 
 interface ChatMessageListProps {
@@ -124,7 +125,12 @@ export default function ChatMessageList({ messages }: ChatMessageListProps) {
 
             {/* Query Result Table */}
             {msg.rows && msg.columns && (
-              <QueryResultTable columns={msg.columns} rows={msg.rows} />
+              <>
+                <QueryResultTable columns={msg.columns} rows={msg.rows} />
+                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 6 }}>
+                  <ExportButton rows={msg.rows} columns={msg.columns} filename="pulse_query" />
+                </div>
+              </>
             )}
           </div>
         );
