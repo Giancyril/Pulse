@@ -3,14 +3,16 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import FileUploadZone from "@/components/datasets/FileUploadZone";
+import DbConnectModal from "@/components/datasets/DbConnectModal";
 import { api } from "@/lib/api-client";
-import type { Dataset, UploadResponse } from "@/types/dataset";
+import type { Dataset, UploadResponse, ConnectDbResponse } from "@/types/dataset";
 import { formatNumber } from "@/lib/utils";
 
 export default function DatasetsPage() {
   const [datasets, setDatasets] = useState<Dataset[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedDataset, setSelectedDataset] = useState<Dataset | null>(null);
+  const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
 
   const fetchDatasets = async () => {
     try {
@@ -20,7 +22,7 @@ export default function DatasetsPage() {
         setSelectedDataset(data[0]);
       }
     } catch {
-      // Backend not running or empty
+      // Backend empty or offline
     } finally {
       setIsLoading(false);
     }
@@ -31,6 +33,10 @@ export default function DatasetsPage() {
   }, []);
 
   const handleUploadSuccess = (res: UploadResponse) => {
+    fetchDatasets();
+  };
+
+  const handleConnectSuccess = (res: ConnectDbResponse) => {
     fetchDatasets();
   };
 
@@ -56,6 +62,13 @@ export default function DatasetsPage() {
           </div>
         </Link>
         <div style={{ display: "flex", gap: 10 }}>
+          <button
+            onClick={() => setIsConnectModalOpen(true)}
+            className="btn-ghost"
+            style={{ fontSize: 13 }}
+          >
+            🔌 Connect SQL Database
+          </button>
           <Link href="/chat">
             <button className="btn-primary" style={{ fontSize: 13 }}>
               Open Chat Explorer →
@@ -229,6 +242,12 @@ export default function DatasetsPage() {
           </div>
         </div>
       </div>
+
+      <DbConnectModal
+        isOpen={isConnectModalOpen}
+        onClose={() => setIsConnectModalOpen(false)}
+        onSuccess={handleConnectSuccess}
+      />
     </div>
   );
 }
