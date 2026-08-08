@@ -79,19 +79,16 @@ export default function HomePage() {
         </div>
         <div style={{ display: "flex", gap: 10 }}>
           <Link href="/datasets">
-            <button className="btn-ghost" style={{ fontSize: 13 }}>
-              Datasets
-            </button>
+            <button className="btn-ghost" style={{ fontSize: 13 }}>Datasets</button>
           </Link>
           <Link href="/dashboards">
-            <button className="btn-ghost" style={{ fontSize: 13 }}>
-              Dashboards
-            </button>
+            <button className="btn-ghost" style={{ fontSize: 13 }}>Dashboards</button>
+          </Link>
+          <Link href="/profiling">
+            <button className="btn-ghost" style={{ fontSize: 13 }}>Data Quality</button>
           </Link>
           <Link href="/chat">
-            <button className="btn-primary" style={{ fontSize: 13 }}>
-              Start Analyzing
-            </button>
+            <button className="btn-primary" style={{ fontSize: 13 }}>Start Analyzing</button>
           </Link>
         </div>
       </nav>
