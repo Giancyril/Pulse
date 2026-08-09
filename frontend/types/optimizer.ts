@@ -9,10 +9,10 @@ export interface OptimizationSuggestion {
 
 export interface SqlOptimizeResponse {
   original_sql: string;
-  optimized_sql: str;
+  optimized_sql: string;
   transpiled_sql?: string | null;
   target_dialect?: string | null;
   complexity_score: number;
   suggestions: OptimizationSuggestion[];
-  ast_summary: str;
+  ast_summary: string;
 }

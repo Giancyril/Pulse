@@ -109,7 +109,7 @@ export default function ForecastChart({ data }: ForecastChartProps) {
             <YAxis tick={TICK_STYLE} tickFormatter={(v) => formatNumber(v)} />
             <Tooltip
               contentStyle={TOOLTIP_STYLE}
-              formatter={(value: number, name: string) => [formatNumber(value), name]}
+              formatter={(value: any, name: any) => [formatNumber(Number(value ?? 0)), String(name ?? "")]}
             />
             <Legend wrapperStyle={{ fontSize: 11 }} />
             {splitLabel && (
