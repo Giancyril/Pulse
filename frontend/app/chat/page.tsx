@@ -6,6 +6,7 @@ import { BarChart3, Database, Send, Sparkles, MessageSquare, Plus, CheckCircle2 
 import { api } from "@/lib/api-client";
 import ChatMessageList from "@/components/chat/ChatMessageList";
 import PipelineLoader from "@/components/shared/PipelineLoader";
+import CustomSelectDropdown from "@/components/shared/CustomSelectDropdown";
 import type { Dataset } from "@/types/dataset";
 import type { ChatMessage, ChatResponse } from "@/types/chat";
 
@@ -139,34 +140,23 @@ export default function ChatPage() {
           </div>
         </Link>
 
-        {/* Dataset Selector */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 500 }}>
-            Target Dataset:
-          </span>
-          <select
-            value={selectedDatasetId}
-            onChange={(e) => setSelectedDatasetId(e.target.value)}
-            style={{
-              padding: "6px 12px",
-              borderRadius: "var(--radius-sm)",
-              background: "var(--surface-hover)",
-              border: "1px solid var(--border)",
-              color: "var(--text-primary)",
-              fontSize: 13,
-              cursor: "pointer",
-            }}
-          >
-            {datasets.length === 0 ? (
-              <option value="">No datasets found</option>
-            ) : (
-              datasets.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name} ({d.source})
-                </option>
-              ))
-            )}
-          </select>
+        {/* Controls */}
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 220 }}>
+            <span style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 500, flexShrink: 0 }}>
+              Target Dataset:
+            </span>
+            <CustomSelectDropdown
+              options={
+                datasets.length === 0
+                  ? [{ label: "No datasets found", value: "" }]
+                  : datasets.map((d) => ({ label: `${d.name} (${d.source})`, value: d.id }))
+              }
+              value={selectedDatasetId}
+              onChange={setSelectedDatasetId}
+              placeholder="Select dataset..."
+            />
+          </div>
 
           <Link href="/datasets">
             <button className="btn-ghost" style={{ fontSize: 12, padding: "5px 12px" }}>

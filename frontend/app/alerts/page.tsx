@@ -7,6 +7,8 @@ import { api } from "@/lib/api-client";
 import type { AlertRule, AlertRuleCreate, AlertEvalResult } from "@/types/alert";
 import type { Dataset } from "@/types/dataset";
 
+import CustomSelectDropdown from "@/components/shared/CustomSelectDropdown";
+
 export default function AlertsPage() {
   const [rules, setRules] = useState<AlertRule[]>([]);
   const [datasets, setDatasets] = useState<Dataset[]>([]);
@@ -17,7 +19,7 @@ export default function AlertsPage() {
   const [form, setForm] = useState<AlertRuleCreate>({ name: "", dataset_id: "", metric_column: "", aggregate_fn: "AVG", operator: ">", threshold: 0, severity: "warning" });
   const [evaluatingId, setEvaluatingId] = useState<string | null>(null);
 
-  const loadRules = () => api.get<AlertRule[]>("/alerts").then(setRules).catch(() => {});
+  const loadRules = () => api.get<AlertRule[]>("/alerts").then(setRules).catch(() => { });
   useEffect(() => {
     Promise.all([
       api.get<AlertRule[]>("/alerts").then(setRules),
@@ -75,7 +77,7 @@ export default function AlertsPage() {
       <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 32px", borderBottom: "1px solid var(--border)", background: "var(--surface)" }}>
         <Link href="/" style={{ textDecoration: "none" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 28, height: 28, borderRadius: "var(--radius-sm)", background: "var(--accent-dim)", border: "1px solid var(--accent-border)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent)" }}><BarChart3 size={16} /></div>
+
             <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", letterSpacing: "0.25em", textTransform: "uppercase" }}>Pulse</span>
           </div>
         </Link>
@@ -106,29 +108,43 @@ export default function AlertsPage() {
               </div>
               <div>
                 <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: 6 }}>Dataset</label>
-                <select value={form.dataset_id} onChange={(e) => setForm({ ...form, dataset_id: e.target.value, metric_column: "" })} required style={{ width: "100%", padding: "8px 10px", background: "var(--surface-hover)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", color: "var(--text-primary)", fontSize: 13 }}>
-                  <option value="">Select...</option>
-                  {datasets.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                </select>
+                <CustomSelectDropdown
+                  options={[
+                    { label: "Select...", value: "" },
+                    ...datasets.map((d) => ({ label: d.name, value: d.id })),
+                  ]}
+                  value={form.dataset_id}
+                  onChange={(val) => setForm({ ...form, dataset_id: val, metric_column: "" })}
+                  placeholder="Select..."
+                />
               </div>
               <div>
                 <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: 6 }}>Metric Column</label>
-                <select value={form.metric_column} onChange={(e) => setForm({ ...form, metric_column: e.target.value })} required style={{ width: "100%", padding: "8px 10px", background: "var(--surface-hover)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", color: "var(--text-primary)", fontSize: 13 }}>
-                  <option value="">Select...</option>
-                  {columns.map((c) => <option key={c.name} value={c.name}>{c.name}</option>)}
-                </select>
+                <CustomSelectDropdown
+                  options={[
+                    { label: "Select...", value: "" },
+                    ...columns.map((c) => ({ label: c.name, value: c.name })),
+                  ]}
+                  value={form.metric_column}
+                  onChange={(val) => setForm({ ...form, metric_column: val })}
+                  placeholder="Select..."
+                />
               </div>
               <div>
                 <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: 6 }}>Aggregate</label>
-                <select value={form.aggregate_fn} onChange={(e) => setForm({ ...form, aggregate_fn: e.target.value as AlertRuleCreate["aggregate_fn"] })} style={{ width: "100%", padding: "8px 10px", background: "var(--surface-hover)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", color: "var(--text-primary)", fontSize: 13 }}>
-                  {["AVG", "SUM", "MAX", "MIN", "COUNT"].map((f) => <option key={f} value={f}>{f}</option>)}
-                </select>
+                <CustomSelectDropdown
+                  options={["AVG", "SUM", "MAX", "MIN", "COUNT"].map((f) => ({ label: f, value: f }))}
+                  value={form.aggregate_fn}
+                  onChange={(val) => setForm({ ...form, aggregate_fn: val as any })}
+                />
               </div>
               <div>
                 <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: 6 }}>Operator</label>
-                <select value={form.operator} onChange={(e) => setForm({ ...form, operator: e.target.value as AlertRuleCreate["operator"] })} style={{ width: "100%", padding: "8px 10px", background: "var(--surface-hover)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", color: "var(--text-primary)", fontSize: 13 }}>
-                  {[">", "<", ">=", "<=", "=="].map((op) => <option key={op} value={op}>{op}</option>)}
-                </select>
+                <CustomSelectDropdown
+                  options={[">", "<", ">=", "<=", "=="].map((op) => ({ label: op, value: op }))}
+                  value={form.operator}
+                  onChange={(val) => setForm({ ...form, operator: val as any })}
+                />
               </div>
               <div>
                 <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: 6 }}>Threshold</label>
@@ -136,9 +152,11 @@ export default function AlertsPage() {
               </div>
               <div>
                 <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: 6 }}>Severity</label>
-                <select value={form.severity} onChange={(e) => setForm({ ...form, severity: e.target.value as AlertRuleCreate["severity"] })} style={{ width: "100%", padding: "8px 10px", background: "var(--surface-hover)", border: "1px solid var(--border)", borderRadius: "var(--radius-sm)", color: "var(--text-primary)", fontSize: 13 }}>
-                  {["info", "warning", "critical"].map((s) => <option key={s} value={s}>{s}</option>)}
-                </select>
+                <CustomSelectDropdown
+                  options={["info", "warning", "critical"].map((s) => ({ label: s, value: s }))}
+                  value={form.severity}
+                  onChange={(val) => setForm({ ...form, severity: val as any })}
+                />
               </div>
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 16 }}>

@@ -8,6 +8,8 @@ import ForecastChart from "@/components/charts/ForecastChart";
 import type { Dataset } from "@/types/dataset";
 import type { ForecastResponse } from "@/types/forecast";
 
+import CustomSelectDropdown from "@/components/shared/CustomSelectDropdown";
+
 export default function ForecastPage() {
   const [datasets, setDatasets] = useState<Dataset[]>([]);
   const [selectedId, setSelectedId] = useState("");
@@ -23,12 +25,11 @@ export default function ForecastPage() {
     api.get<Dataset[]>("/datasets").then((d) => {
       setDatasets(d);
       if (d[0]) setSelectedId(d[0].id);
-    }).catch(() => {});
+    }).catch(() => { });
   }, []);
 
   const activeDataset = datasets.find((d) => d.id === selectedId);
   const columns = activeDataset?.tables[0]?.columns ?? [];
-  const numericColumns = columns.filter((c) => ["INTEGER", "FLOAT", "NUMERIC", "int64", "float64"].some((t) => c.type?.toUpperCase().includes(t.toUpperCase())));
 
   const handleRun = async () => {
     if (!selectedId || !valueColumn) return;
@@ -52,9 +53,7 @@ export default function ForecastPage() {
       <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 32px", borderBottom: "1px solid var(--border)", background: "var(--surface)" }}>
         <Link href="/" style={{ textDecoration: "none" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 28, height: 28, borderRadius: "var(--radius-sm)", background: "var(--accent-dim)", border: "1px solid var(--accent-border)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent)" }}>
-              <BarChart3 size={16} />
-            </div>
+
             <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", letterSpacing: "0.25em", textTransform: "uppercase" }}>Pulse</span>
           </div>
         </Link>
@@ -72,23 +71,36 @@ export default function ForecastPage() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 16 }}>
             <div>
               <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: 6 }}>Dataset</label>
-              <select value={selectedId} onChange={(e) => { setSelectedId(e.target.value); setValueColumn(""); setLabelColumn(""); }} style={{ width: "100%", padding: "8px 10px", borderRadius: "var(--radius-sm)", background: "var(--surface-hover)", border: "1px solid var(--border)", color: "var(--text-primary)", fontSize: 13 }}>
-                {datasets.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-              </select>
+              <CustomSelectDropdown
+                options={datasets.map((d) => ({ label: d.name, value: d.id }))}
+                value={selectedId}
+                onChange={(val) => { setSelectedId(val); setValueColumn(""); setLabelColumn(""); }}
+                placeholder="Select dataset..."
+              />
             </div>
             <div>
               <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: 6 }}>Value Column (Numeric)</label>
-              <select value={valueColumn} onChange={(e) => setValueColumn(e.target.value)} style={{ width: "100%", padding: "8px 10px", borderRadius: "var(--radius-sm)", background: "var(--surface-hover)", border: "1px solid var(--border)", color: "var(--text-primary)", fontSize: 13 }}>
-                <option value="">Select column...</option>
-                {columns.map((c) => <option key={c.name} value={c.name}>{c.name} ({c.type})</option>)}
-              </select>
+              <CustomSelectDropdown
+                options={[
+                  { label: "Select column...", value: "" },
+                  ...columns.map((c) => ({ label: `${c.name} (${c.type})`, value: c.name })),
+                ]}
+                value={valueColumn}
+                onChange={setValueColumn}
+                placeholder="Select column..."
+              />
             </div>
             <div>
               <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: 6 }}>Label Column (Optional)</label>
-              <select value={labelColumn} onChange={(e) => setLabelColumn(e.target.value)} style={{ width: "100%", padding: "8px 10px", borderRadius: "var(--radius-sm)", background: "var(--surface-hover)", border: "1px solid var(--border)", color: "var(--text-primary)", fontSize: 13 }}>
-                <option value="">Use row index</option>
-                {columns.map((c) => <option key={c.name} value={c.name}>{c.name}</option>)}
-              </select>
+              <CustomSelectDropdown
+                options={[
+                  { label: "Use row index", value: "" },
+                  ...columns.map((c) => ({ label: c.name, value: c.name })),
+                ]}
+                value={labelColumn}
+                onChange={setLabelColumn}
+                placeholder="Use row index"
+              />
             </div>
             <div>
               <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: 6 }}>Forecast Periods</label>
@@ -96,10 +108,14 @@ export default function ForecastPage() {
             </div>
             <div>
               <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: 6 }}>Method</label>
-              <select value={method} onChange={(e) => setMethod(e.target.value as "linear_regression" | "moving_average")} style={{ width: "100%", padding: "8px 10px", borderRadius: "var(--radius-sm)", background: "var(--surface-hover)", border: "1px solid var(--border)", color: "var(--text-primary)", fontSize: 13 }}>
-                <option value="linear_regression">Linear Regression</option>
-                <option value="moving_average">Moving Average</option>
-              </select>
+              <CustomSelectDropdown
+                options={[
+                  { label: "Linear Regression", value: "linear_regression" },
+                  { label: "Moving Average", value: "moving_average" },
+                ]}
+                value={method}
+                onChange={(val) => setMethod(val as any)}
+              />
             </div>
             <div style={{ display: "flex", alignItems: "flex-end" }}>
               <button onClick={handleRun} disabled={!selectedId || !valueColumn || isLoading} className="btn-primary" style={{ width: "100%", fontSize: 13, padding: "9px 0" }}>

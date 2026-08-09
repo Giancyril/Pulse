@@ -9,6 +9,7 @@ import HealthScoreMeter from "@/components/profiling/HealthScoreMeter";
 import ColumnProfileCard from "@/components/profiling/ColumnProfileCard";
 import type { DataQualityReport } from "@/types/profiling";
 import type { Dataset } from "@/types/dataset";
+import CustomSelectDropdown from "@/components/shared/CustomSelectDropdown";
 
 export default function ProfilingPage() {
   const searchParams = useSearchParams();
@@ -23,7 +24,7 @@ export default function ProfilingPage() {
       setDatasets(data);
       const preselect = searchParams.get("dataset") || (data[0]?.id ?? "");
       setSelectedId(preselect);
-    }).catch(() => {});
+    }).catch(() => { });
   }, []);
 
   useEffect(() => {
@@ -43,9 +44,7 @@ export default function ProfilingPage() {
       <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 32px", borderBottom: "1px solid var(--border)", background: "var(--surface)" }}>
         <Link href="/" style={{ textDecoration: "none" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 28, height: 28, borderRadius: "var(--radius-sm)", background: "var(--accent-dim)", border: "1px solid var(--accent-border)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent)" }}>
-              <BarChart3 size={16} />
-            </div>
+
             <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", letterSpacing: "0.25em", textTransform: "uppercase" }}>
               Pulse
             </span>
@@ -72,21 +71,18 @@ export default function ProfilingPage() {
               Statistical profiling, missingness analysis, IQR outlier detection, and health scoring.
             </p>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Dataset:</span>
-            <select
+          <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 200 }}>
+            <span style={{ fontSize: 12, color: "var(--text-muted)", flexShrink: 0 }}>Dataset:</span>
+            <CustomSelectDropdown
+              options={
+                datasets.length === 0
+                  ? [{ label: "No datasets connected", value: "" }]
+                  : datasets.map((d) => ({ label: d.name, value: d.id }))
+              }
               value={selectedId}
-              onChange={(e) => setSelectedId(e.target.value)}
-              style={{ padding: "7px 12px", borderRadius: "var(--radius-sm)", background: "var(--surface-hover)", border: "1px solid var(--border)", color: "var(--text-primary)", fontSize: 13 }}
-            >
-              {datasets.length === 0 ? (
-                <option value="">No datasets connected</option>
-              ) : (
-                datasets.map((d) => (
-                  <option key={d.id} value={d.id}>{d.name}</option>
-                ))
-              )}
-            </select>
+              onChange={setSelectedId}
+              placeholder="Select dataset..."
+            />
           </div>
         </div>
 
