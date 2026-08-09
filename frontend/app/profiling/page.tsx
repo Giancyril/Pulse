@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { BarChart3, ArrowRight, AlertTriangle, Loader2 } from "lucide-react";
@@ -11,7 +11,7 @@ import type { DataQualityReport } from "@/types/profiling";
 import type { Dataset } from "@/types/dataset";
 import CustomSelectDropdown from "@/components/shared/CustomSelectDropdown";
 
-export default function ProfilingPage() {
+function ProfilingContent() {
   const searchParams = useSearchParams();
   const [datasets, setDatasets] = useState<Dataset[]>([]);
   const [selectedId, setSelectedId] = useState<string>("");
@@ -24,8 +24,8 @@ export default function ProfilingPage() {
       setDatasets(data);
       const preselect = searchParams.get("dataset") || (data[0]?.id ?? "");
       setSelectedId(preselect);
-    }).catch(() => { });
-  }, []);
+    }).catch(() => {});
+  }, [searchParams]);
 
   useEffect(() => {
     if (!selectedId) return;
@@ -44,7 +44,9 @@ export default function ProfilingPage() {
       <nav style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 32px", borderBottom: "1px solid var(--border)", background: "var(--surface)" }}>
         <Link href="/" style={{ textDecoration: "none" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-
+            <div style={{ width: 28, height: 28, borderRadius: "var(--radius-sm)", background: "var(--accent-dim)", border: "1px solid var(--accent-border)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent)" }}>
+              <BarChart3 size={16} />
+            </div>
             <span style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", letterSpacing: "0.25em", textTransform: "uppercase" }}>
               Pulse
             </span>
@@ -153,5 +155,17 @@ export default function ProfilingPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function ProfilingPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", color: "var(--text-muted)" }}>
+        <Loader2 size={24} className="animate-spin" />
+      </div>
+    }>
+      <ProfilingContent />
+    </Suspense>
   );
 }
