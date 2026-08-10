@@ -169,7 +169,7 @@ function AnomaliesContent() {
                 <div key={card.label} className="card" style={{ padding: "16px 20px" }}>
                   <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 4 }}>{card.label}</div>
                   <div style={{ fontSize: 22, fontWeight: 800, color: card.color, fontFamily: "var(--font-mono)" }}>
-                    {formatNumber(card.value)}
+                    {typeof card.value === "number" ? formatNumber(card.value) : card.value}
                   </div>
                 </div>
               ))}
