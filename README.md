@@ -12,6 +12,8 @@ A production-grade, AI-augmented Data Analytics & SQL Intelligence platform desi
 - **Interactive Query Result Table**: Paginated data grid with sorting, formatted numeric columns, and execution timing indicators
 
 ### Advanced Features
+- **Automated Anomaly & Outlier Detection Engine**: Statistical Z-Score ($\sigma$) scanner identifying anomalous records across dataset attributes with customizable sensitivity sliders ($1.5\sigma - 4.0\sigma$) and severity classification (`EXTREME`, `MODERATE`, `MILD`)
+- **Executive BI Report Generator**: AI-synthesized executive briefings powered by Google Gemini, generating automated KPI scorecards, risk/growth category insights, strategic recommendations, and downloadable Markdown reports
 - **Automated Data Profiling & Health Scoring**: Computes statistical column summaries, missingness percentages, distinct ratios, IQR (Interquartile Range) outlier bounds, and an overall dataset **Health Score (0-100%)** displayed with an SVG progress ring
 - **Multi-Format Analytics Export Engine**: Instant streaming export of query results into **CSV**, **JSON**, **Excel (.xlsx)**, and **Markdown (.md)** table files with client-side trigger integration
 - **Trend & Forecast Prediction Engine**: Linear regression analysis with $R^2$ quality fit scoring, slope calculation, moving-average forward forecasting, and Recharts `ForecastChart` displaying actual historical areas vs projected forecast lines
@@ -26,12 +28,12 @@ A production-grade, AI-augmented Data Analytics & SQL Intelligence platform desi
 ### Backend
 - **Python 3.14** with **FastAPI**
 - **SQLAlchemy** for ORM & database session management
-- **Pandas & NumPy** for statistical profiling, IQR outlier detection, and linear regression
+- **Pandas & NumPy** for statistical profiling, IQR outlier detection, Z-Score anomaly analysis, and linear regression
 - **sqlglot** for SQL AST parsing, read-only validation, linting, transpilation, and formatting
 - **openpyxl** for native Excel workbook generation
 - **Pydantic v2** for strict schema validation
-- **Pytest** for backend unit test suites (37/37 passing)
-- **Google Gemini AI** for natural language translation to SQL
+- **Pytest** for backend unit test suites (42/42 passing)
+- **Google Gemini AI** for natural language translation to SQL and executive BI report synthesis
 
 ### Frontend
 - **React 19** with **Next.js 16 App Router**
