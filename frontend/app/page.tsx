@@ -93,6 +93,12 @@ export default function HomePage() {
           <Link href="/alerts">
             <button className="btn-ghost" style={{ fontSize: 13 }}>Watchdog</button>
           </Link>
+          <Link href="/anomalies">
+            <button className="btn-ghost" style={{ fontSize: 13 }}>Anomalies</button>
+          </Link>
+          <Link href="/reports">
+            <button className="btn-ghost" style={{ fontSize: 13 }}>Reports</button>
+          </Link>
           <Link href="/chat">
             <button className="btn-primary" style={{ fontSize: 13 }}>Start Analyzing</button>
           </Link>
