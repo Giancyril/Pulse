@@ -3,7 +3,7 @@ backend/app/api/v1/api.py
 API Router aggregator for v1 endpoints.
 """
 from fastapi import APIRouter
-from app.api.v1.endpoints import health, upload, datasets, connect_db, chat, dashboards, profiling, export, forecast, alerts, optimizer
+from app.api.v1.endpoints import health, upload, datasets, connect_db, chat, dashboards, profiling, export, forecast, alerts, optimizer, anomaly
 
 api_router = APIRouter()
 
@@ -18,3 +18,4 @@ api_router.include_router(export.router)
 api_router.include_router(forecast.router)
 api_router.include_router(alerts.router)
 api_router.include_router(optimizer.router)
+api_router.include_router(anomaly.router)
