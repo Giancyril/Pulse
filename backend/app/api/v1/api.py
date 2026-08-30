@@ -5,7 +5,7 @@ API Router aggregator for v1 endpoints.
 from fastapi import APIRouter
 from app.api.v1.endpoints import (
     health, upload, datasets, connect_db, chat, dashboards,
-    profiling, export, forecast, alerts, optimizer, anomaly, reports, cleaning
+    profiling, export, forecast, alerts, optimizer, anomaly, reports, cleaning, eda
 )
 
 api_router = APIRouter()
@@ -24,4 +24,6 @@ api_router.include_router(alerts.router)
 api_router.include_router(optimizer.router)
 api_router.include_router(anomaly.router)
 api_router.include_router(reports.router)
+api_router.include_router(eda.router)
+
 
