@@ -7,6 +7,8 @@ import { BarChart3, ArrowRight, AlertTriangle, Loader2 } from "lucide-react";
 import { api } from "@/lib/api-client";
 import HealthScoreMeter from "@/components/profiling/HealthScoreMeter";
 import ColumnProfileCard from "@/components/profiling/ColumnProfileCard";
+import GuidedCleaningTab from "@/components/profiling/GuidedCleaningTab";
+import AutomatedEDATab from "@/components/profiling/AutomatedEDATab";
 import type { DataQualityReport } from "@/types/profiling";
 import type { Dataset } from "@/types/dataset";
 import CustomSelectDropdown from "@/components/shared/CustomSelectDropdown";
@@ -15,6 +17,7 @@ function ProfilingContent() {
   const searchParams = useSearchParams();
   const [datasets, setDatasets] = useState<Dataset[]>([]);
   const [selectedId, setSelectedId] = useState<string>("");
+  const [activeTab, setActiveTab] = useState<"quality" | "cleaning" | "eda">("quality");
   const [report, setReport] = useState<DataQualityReport | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -104,39 +107,81 @@ function ProfilingContent() {
 
         {report && !isLoading && (
           <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-            {/* Health Score Panel */}
-            <HealthScoreMeter
-              score={report.health_score}
-              totalRows={report.total_rows}
-              totalColumns={report.total_columns}
-              nullPercentage={report.overall_null_percentage}
-              duplicateCount={report.duplicate_row_count}
-              warningCount={report.warnings.length}
-            />
+            {/* Tabs */}
+            <div style={{ display: "flex", borderBottom: "1px solid var(--border)", gap: 32 }}>
+              {["quality", "cleaning", "eda"].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab as any)}
+                  style={{
+                    padding: "12px 0",
+                    background: "none",
+                    border: "none",
+                    borderBottom: activeTab === tab ? "2px solid var(--accent)" : "2px solid transparent",
+                    color: activeTab === tab ? "var(--accent)" : "var(--text-muted)",
+                    fontWeight: activeTab === tab ? 600 : 500,
+                    fontSize: 14,
+                    cursor: "pointer",
+                    textTransform: "capitalize",
+                    transition: "all 0.2s"
+                  }}
+                >
+                  {tab === "quality" ? "Data Quality" : tab === "cleaning" ? "Guided Cleaning" : "Automated EDA"}
+                </button>
+              ))}
+            </div>
 
-            {/* Warnings */}
-            {report.warnings.length > 0 && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {report.warnings.map((w, i) => (
-                  <div key={i} style={{ padding: "9px 14px", borderRadius: "var(--radius-sm)", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)", fontSize: 12, color: "var(--warning)", display: "flex", alignItems: "center", gap: 8 }}>
-                    <AlertTriangle size={13} />
-                    <span>{w}</span>
+            {/* Tab Content */}
+            {activeTab === "quality" && (
+              <>
+                <HealthScoreMeter
+                  score={report.health_score}
+                  totalRows={report.total_rows}
+                  totalColumns={report.total_columns}
+                  nullPercentage={report.overall_null_percentage}
+                  duplicateCount={report.duplicate_row_count}
+                  warningCount={report.warnings.length}
+                />
+
+                {report.warnings.length > 0 && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {report.warnings.map((w, i) => (
+                      <div key={i} style={{ padding: "9px 14px", borderRadius: "var(--radius-sm)", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)", fontSize: 12, color: "var(--warning)", display: "flex", alignItems: "center", gap: 8 }}>
+                        <AlertTriangle size={13} />
+                        <span>{w}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                )}
+
+                <div>
+                  <h2 style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)", marginBottom: 14 }}>
+                    Column Profiles ({report.column_profiles.length})
+                  </h2>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {report.column_profiles.map((col) => (
+                      <ColumnProfileCard key={col.name} profile={col} />
+                    ))}
+                  </div>
+                </div>
+              </>
             )}
 
-            {/* Column Profiles */}
-            <div>
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)", marginBottom: 14 }}>
-                Column Profiles ({report.column_profiles.length})
-              </h2>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {report.column_profiles.map((col) => (
-                  <ColumnProfileCard key={col.name} profile={col} />
-                ))}
-              </div>
-            </div>
+            {activeTab === "cleaning" && (
+              <GuidedCleaningTab 
+                datasetId={selectedId} 
+                onRefreshProfile={() => {
+                  // Re-fetch profile report
+                  api.get<DataQualityReport>(`/datasets/${selectedId}/profile`)
+                    .then(setReport)
+                    .catch(() => {});
+                }} 
+              />
+            )}
+
+            {activeTab === "eda" && (
+              <AutomatedEDATab datasetId={selectedId} />
+            )}
           </div>
         )}
 
