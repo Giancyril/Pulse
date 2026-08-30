@@ -327,7 +327,13 @@ class EDAComputationService:
         top_pairs = correlation_matrix.top_pairs if correlation_matrix else []
         pairwise_scatters = cls._compute_pairwise_scatters(num_df, top_pairs)
 
-        narrative = cls._build_narrative(distributions, categorical_breakdowns, top_pairs, total_rows)
+        from app.services.eda_narrative import EDANarrativeService
+        ai_narrative = EDANarrativeService.generate_narrative(
+            distributions, categorical_breakdowns, top_pairs, total_rows
+        )
+        narrative = ai_narrative if ai_narrative else cls._build_narrative(
+            distributions, categorical_breakdowns, top_pairs, total_rows
+        )
 
         # Serialize for cache storage
         corr_json = correlation_matrix.model_dump() if correlation_matrix else {}
