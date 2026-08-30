@@ -5,6 +5,7 @@ Guided data cleaning engine: suggestion generation, preview dry-runs, and atomic
 from typing import List, Dict, Any, Optional, Tuple
 import re
 import math
+from datetime import datetime, UTC
 import numpy as np
 import pandas as pd
 from sqlalchemy import text
@@ -53,7 +54,6 @@ def _try_parse_datetime_ratio(series: pd.Series) -> float:
 
     dt_count = 0
     for val in clean_s.head(100):
-        # quick regex check before expensive pd.to_datetime
         if re.search(r"\d{4}[-/]\d{1,2}[-/]\d{1,2}|\d{1,2}[-/]\d{1,2}[-/]\d{2,4}", val):
             try:
                 pd.to_datetime(val, errors="raise")
@@ -61,6 +61,23 @@ def _try_parse_datetime_ratio(series: pd.Series) -> float:
             except Exception:
                 pass
     return dt_count / min(len(clean_s), 100)
+
+
+def _clean_row_dict(row: Dict[str, Any]) -> Dict[str, Any]:
+    """Ensure row dictionary is clean JSON-serializable."""
+    out = {}
+    for k, v in row.items():
+        if pd.isna(v) or v is None:
+            out[k] = None
+        elif isinstance(v, (np.floating, float)):
+            out[k] = None if math.isnan(v) or math.isinf(v) else float(v)
+        elif isinstance(v, (np.integer, int)):
+            out[k] = int(v)
+        elif isinstance(v, (pd.Timestamp, np.datetime64)):
+            out[k] = str(v)
+        else:
+            out[k] = v
+    return out
 
 
 class CleaningSuggestionService:
@@ -74,7 +91,6 @@ class CleaningSuggestionService:
         if not dataset:
             raise ValueError(f"Dataset '{dataset_id}' not found.")
 
-        # Re-use existing Profiling and Anomaly services
         report = ProfilingService.profile_dataset(dataset_id, db)
         anomalies_resp = AnomalyService.detect_anomalies(dataset_id, threshold_z=3.0, target_columns=None, db=db)
 
@@ -328,4 +344,350 @@ class CleaningSuggestionService:
             total_suggestions=len(suggestions),
             health_score=report.health_score,
             suggestions=suggestions,
+        )
+
+
+class CleaningExecutionService:
+    @staticmethod
+    def apply_transformation(df: pd.DataFrame, req: CleaningActionRequest) -> Tuple[pd.DataFrame, int, str, List[CleaningDiffSample]]:
+        """
+        Executes in-memory dataframe transformation according to action_type.
+        Returns: (transformed_df, rows_affected, summary_str, sample_diff)
+        """
+        df_new = df.copy()
+        action = req.action_type
+        col = req.column_name or req.parameters.get("column")
+        params = req.parameters or {}
+        samples: List[CleaningDiffSample] = []
+        rows_affected = 0
+        summary = ""
+
+        if action == "drop_null_rows":
+            target_cols = params.get("columns", [col] if col else list(df.columns))
+            valid_cols = [c for c in target_cols if c in df.columns]
+            how = params.get("how", "any")
+            if how == "all":
+                mask = df[valid_cols].isnull().all(axis=1)
+            else:
+                mask = df[valid_cols].isnull().any(axis=1)
+
+            rows_affected = int(mask.sum())
+            dropped_indices = df[mask].index[:5]
+            for idx in dropped_indices:
+                samples.append(
+                    CleaningDiffSample(
+                        row_index=int(idx),
+                        before=_clean_row_dict(df.loc[idx].to_dict()),
+                        after=None,
+                    )
+                )
+            df_new = df[~mask].reset_index(drop=True)
+            summary = f"Dropped {rows_affected} row(s) containing missing values in {', '.join(valid_cols)}."
+
+        elif action in ("impute_mean", "impute_median", "impute_mode", "impute_constant"):
+            if not col or col not in df.columns:
+                raise ValueError(f"Column '{col}' not found in dataset.")
+
+            mask = df[col].isnull()
+            rows_affected = int(mask.sum())
+
+            if rows_affected > 0:
+                if action == "impute_mean":
+                    clean_vals = pd.to_numeric(df[col], errors="coerce").dropna()
+                    fill_val = params.get("value", round(float(clean_vals.mean()), 4) if not clean_vals.empty else 0.0)
+                    summary = f"Imputed {rows_affected} missing cell(s) in '{col}' with mean value {fill_val}."
+                elif action == "impute_median":
+                    clean_vals = pd.to_numeric(df[col], errors="coerce").dropna()
+                    fill_val = params.get("value", round(float(clean_vals.median()), 4) if not clean_vals.empty else 0.0)
+                    summary = f"Imputed {rows_affected} missing cell(s) in '{col}' with median value {fill_val}."
+                elif action == "impute_mode":
+                    mode_series = df[col].dropna().mode()
+                    default_mode = str(mode_series.iloc[0]) if not mode_series.empty else "Unknown"
+                    fill_val = params.get("value", default_mode)
+                    summary = f"Imputed {rows_affected} missing cell(s) in '{col}' with mode value '{fill_val}'."
+                else:  # impute_constant
+                    fill_val = params.get("value", 0)
+                    summary = f"Imputed {rows_affected} missing cell(s) in '{col}' with constant '{fill_val}'."
+
+                df_new[col] = df_new[col].fillna(fill_val)
+
+                affected_indices = df[mask].index[:5]
+                for idx in affected_indices:
+                    samples.append(
+                        CleaningDiffSample(
+                            row_index=int(idx),
+                            before=_clean_row_dict(df.loc[idx].to_dict()),
+                            after=_clean_row_dict(df_new.loc[idx].to_dict()),
+                        )
+                    )
+            else:
+                summary = f"No missing cells found in '{col}'."
+
+        elif action == "drop_duplicates":
+            subset = params.get("subset", None)
+            keep = params.get("keep", "first")
+            mask = df.duplicated(subset=subset, keep=keep)
+            rows_affected = int(mask.sum())
+
+            dup_indices = df[mask].index[:5]
+            for idx in dup_indices:
+                samples.append(
+                    CleaningDiffSample(
+                        row_index=int(idx),
+                        before=_clean_row_dict(df.loc[idx].to_dict()),
+                        after=None,
+                    )
+                )
+            df_new = df.drop_duplicates(subset=subset, keep=keep).reset_index(drop=True)
+            summary = f"Removed {rows_affected} duplicate row(s) (keeping {keep} occurrence)."
+
+        elif action == "cast_column_type":
+            if not col or col not in df.columns:
+                raise ValueError(f"Column '{col}' not found in dataset.")
+
+            target_type = str(params.get("target_type", "FLOAT")).upper()
+            errors = params.get("on_error", "coerce")
+
+            series_str = df[col].astype(str).str.strip().str.replace("$", "", regex=False).str.replace(",", "", regex=False).str.replace("%", "", regex=False)
+
+            if "INT" in target_type:
+                df_new[col] = pd.to_numeric(series_str, errors=errors).round().astype("Int64")
+            elif "FLOAT" in target_type:
+                df_new[col] = pd.to_numeric(series_str, errors=errors).astype(float)
+            elif "TIME" in target_type or "DATE" in target_type:
+                df_new[col] = pd.to_datetime(df[col], errors=errors).dt.strftime("%Y-%m-%d %H:%M:%S")
+            else:
+                df_new[col] = df[col].astype(str)
+
+            # Detect differences
+            diff_mask = df[col].astype(str) != df_new[col].astype(str)
+            rows_affected = int(diff_mask.sum())
+            diff_indices = df[diff_mask].index[:5]
+            for idx in diff_indices:
+                samples.append(
+                    CleaningDiffSample(
+                        row_index=int(idx),
+                        before=_clean_row_dict(df.loc[idx].to_dict()),
+                        after=_clean_row_dict(df_new.loc[idx].to_dict()),
+                    )
+                )
+            summary = f"Coerced column '{col}' to {target_type} data type ({rows_affected} rows transformed)."
+
+        elif action in ("cap_iqr_outliers", "drop_iqr_outliers"):
+            if not col or col not in df.columns:
+                raise ValueError(f"Column '{col}' not found in dataset.")
+
+            factor = float(params.get("factor", 1.5))
+            num_s = pd.to_numeric(df[col], errors="coerce")
+            clean_s = num_s.dropna()
+
+            if len(clean_s) > 3:
+                q25, q75 = np.percentile(clean_s, [25, 75])
+                iqr = q75 - q25
+                lower_b = round(float(q25 - factor * iqr), 4)
+                upper_b = round(float(q75 + factor * iqr), 4)
+
+                outlier_mask = (num_s < lower_b) | (num_s > upper_b)
+                rows_affected = int(outlier_mask.sum())
+
+                outlier_indices = df[outlier_mask].index[:5]
+                if action == "cap_iqr_outliers":
+                    df_new[col] = num_s.clip(lower=lower_b, upper=upper_b)
+                    for idx in outlier_indices:
+                        samples.append(
+                            CleaningDiffSample(
+                                row_index=int(idx),
+                                before=_clean_row_dict(df.loc[idx].to_dict()),
+                                after=_clean_row_dict(df_new.loc[idx].to_dict()),
+                            )
+                        )
+                    summary = f"Winsorized/capped {rows_affected} outlier(s) in '{col}' to range [{lower_b}, {upper_b}]."
+                else:  # drop_iqr_outliers
+                    for idx in outlier_indices:
+                        samples.append(
+                            CleaningDiffSample(
+                                row_index=int(idx),
+                                before=_clean_row_dict(df.loc[idx].to_dict()),
+                                after=None,
+                            )
+                        )
+                    df_new = df[~outlier_mask].reset_index(drop=True)
+                    summary = f"Dropped {rows_affected} row(s) with IQR outlier values in '{col}'."
+            else:
+                summary = f"Insufficient numeric data in '{col}' for IQR outlier analysis."
+
+        elif action in ("cap_zscore_outliers", "drop_zscore_outliers"):
+            if not col or col not in df.columns:
+                raise ValueError(f"Column '{col}' not found in dataset.")
+
+            threshold_z = float(params.get("threshold_z", 3.0))
+            num_s = pd.to_numeric(df[col], errors="coerce")
+            clean_s = num_s.dropna()
+
+            if len(clean_s) > 3 and clean_s.std() > 0:
+                mean = float(clean_s.mean())
+                std = float(clean_s.std())
+                lower_b = round(mean - threshold_z * std, 4)
+                upper_b = round(mean + threshold_z * std, 4)
+
+                z_scores = (num_s - mean) / std
+                outlier_mask = z_scores.abs() >= threshold_z
+                rows_affected = int(outlier_mask.sum())
+
+                outlier_indices = df[outlier_mask].index[:5]
+                if action == "cap_zscore_outliers":
+                    df_new[col] = num_s.clip(lower=lower_b, upper=upper_b)
+                    for idx in outlier_indices:
+                        samples.append(
+                            CleaningDiffSample(
+                                row_index=int(idx),
+                                before=_clean_row_dict(df.loc[idx].to_dict()),
+                                after=_clean_row_dict(df_new.loc[idx].to_dict()),
+                            )
+                        )
+                    summary = f"Winsorized {rows_affected} extreme anomaly record(s) in '{col}' to ±{threshold_z}σ ([{lower_b}, {upper_b}])."
+                else:  # drop_zscore_outliers
+                    for idx in outlier_indices:
+                        samples.append(
+                            CleaningDiffSample(
+                                row_index=int(idx),
+                                before=_clean_row_dict(df.loc[idx].to_dict()),
+                                after=None,
+                            )
+                        )
+                    df_new = df[~outlier_mask].reset_index(drop=True)
+                    summary = f"Dropped {rows_affected} row(s) with extreme Z-score anomalies in '{col}'."
+            else:
+                summary = f"Standard deviation is zero or insufficient data for Z-score analysis in '{col}'."
+
+        else:
+            raise ValueError(f"Unknown cleaning action type '{action}'.")
+
+        return df_new, rows_affected, summary, samples
+
+    @staticmethod
+    def execute_cleaning_action(
+        dataset_id: str,
+        req: CleaningActionRequest,
+        db: Session,
+    ) -> CleaningResultResponse:
+        """
+        Preview (dry_run=True) or apply (dry_run=False) a guided data cleaning action.
+        """
+        dataset = db.query(DatasetModel).filter(DatasetModel.id == dataset_id).first()
+        if not dataset:
+            raise ValueError(f"Dataset '{dataset_id}' not found.")
+
+        with engine.connect() as conn:
+            df = pd.read_sql_table(dataset.table_name, con=conn)
+
+        rows_before = len(df)
+        df_new, rows_affected, summary, sample_diff = CleaningExecutionService.apply_transformation(df, req)
+        rows_after = len(df_new)
+
+        if req.dry_run:
+            return CleaningResultResponse(
+                dry_run=True,
+                action_type=req.action_type,
+                column_name=req.column_name,
+                rows_before=rows_before,
+                rows_after=rows_after,
+                rows_affected=rows_affected,
+                summary=f"[PREVIEW] {summary}",
+                sample_diff=sample_diff,
+                new_health_score=None,
+                action_id=None,
+                applied_at=None,
+            )
+
+        # APPLY: Atomic table mutation
+        df_new.to_sql(
+            name=dataset.table_name,
+            con=engine,
+            if_exists="replace",
+            index=False,
+            chunksize=5000,
+        )
+
+        # Update dataset metadata
+        new_cols_meta = []
+        for c in df_new.columns:
+            sql_type = map_pandas_type_to_sql(str(df_new[c].dtype))
+            new_cols_meta.append(
+                {
+                    "name": c,
+                    "type": sql_type,
+                    "nullable": bool(df_new[c].isnull().any()),
+                }
+            )
+
+        dataset.row_count = rows_after
+        dataset.columns_metadata = new_cols_meta
+
+        # Invalidate any cached EDA report for this dataset
+        db.query(EDAReportModel).filter(EDAReportModel.dataset_id == dataset_id).delete()
+
+        # Record action in audit log
+        action_log = CleaningActionModel(
+            dataset_id=dataset_id,
+            action_type=req.action_type,
+            column_name=req.column_name,
+            parameters=req.parameters or {},
+            rows_affected=rows_affected,
+            summary=summary,
+        )
+        db.add(action_log)
+        db.commit()
+        db.refresh(action_log)
+        db.refresh(dataset)
+
+        # Compute new health score
+        new_report = ProfilingService.profile_dataset(dataset_id, db)
+
+        return CleaningResultResponse(
+            dry_run=False,
+            action_type=req.action_type,
+            column_name=req.column_name,
+            rows_before=rows_before,
+            rows_after=rows_after,
+            rows_affected=rows_affected,
+            summary=summary,
+            sample_diff=sample_diff,
+            new_health_score=new_report.health_score,
+            action_id=action_log.id,
+            applied_at=action_log.applied_at.isoformat() if action_log.applied_at else datetime.now(UTC).isoformat(),
+        )
+
+    @staticmethod
+    def get_cleaning_history(dataset_id: str, db: Session) -> CleaningHistoryResponse:
+        """Returns the chronological audit log of cleaning actions for a dataset."""
+        dataset = db.query(DatasetModel).filter(DatasetModel.id == dataset_id).first()
+        if not dataset:
+            raise ValueError(f"Dataset '{dataset_id}' not found.")
+
+        actions = (
+            db.query(CleaningActionModel)
+            .filter(CleaningActionModel.dataset_id == dataset_id)
+            .order_by(CleaningActionModel.applied_at.desc())
+            .all()
+        )
+
+        history_items = [
+            CleaningActionLog(
+                id=a.id,
+                dataset_id=a.dataset_id,
+                action_type=a.action_type,
+                column_name=a.column_name,
+                parameters=a.parameters or {},
+                rows_affected=a.rows_affected,
+                summary=a.summary,
+                applied_at=a.applied_at.isoformat() if a.applied_at else None,
+            )
+            for a in actions
+        ]
+
+        return CleaningHistoryResponse(
+            dataset_id=dataset_id,
+            total_actions=len(history_items),
+            history=history_items,
         )
