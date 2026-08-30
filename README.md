@@ -15,6 +15,8 @@ A production-grade, AI-augmented Data Analytics & SQL Intelligence platform desi
 - **Automated Anomaly & Outlier Detection Engine**: Statistical Z-Score ($\sigma$) scanner identifying anomalous records across dataset attributes with customizable sensitivity sliders ($1.5\sigma - 4.0\sigma$) and severity classification (`EXTREME`, `MODERATE`, `MILD`)
 - **Executive BI Report Generator**: AI-synthesized executive briefings powered by Google Gemini, generating automated KPI scorecards, risk/growth category insights, strategic recommendations, and downloadable Markdown reports
 - **Automated Data Profiling & Health Scoring**: Computes statistical column summaries, missingness percentages, distinct ratios, IQR (Interquartile Range) outlier bounds, and an overall dataset **Health Score (0-100%)** displayed with an SVG progress ring
+- **Guided Data Cleaning**: Automated defect detection (nulls, duplicates, type mismatches, outliers) generating actionable, one-click cleaning suggestions with live visual diff previews before atomically modifying database tables
+- **Automated Exploratory Data Analysis (EDA)**: Comprehensive engine computing Pearson correlation matrices, dynamic Freedman-Diaconis histograms, categorical distributions, and pairwise scatterplots, summarized by a grounded Gemini AI executive narrative
 - **Multi-Format Analytics Export Engine**: Instant streaming export of query results into **CSV**, **JSON**, **Excel (.xlsx)**, and **Markdown (.md)** table files with client-side trigger integration
 - **Trend & Forecast Prediction Engine**: Linear regression analysis with $R^2$ quality fit scoring, slope calculation, moving-average forward forecasting, and Recharts `ForecastChart` displaying actual historical areas vs projected forecast lines
 - **Real-Time Metric Watchdog & Automated Alerting**: Configurable threshold rules (`>`, `<`, `>=`, `<=`, `==`) monitoring live dataset metrics across aggregations (`AVG`, `SUM`, `MAX`, `MIN`, `COUNT`) with real-time alert evaluation and severity badges (`info`, `warning`, `critical`)
@@ -228,6 +230,11 @@ AI Data Analyst/
 | POST | `/api/v1/connect-db` | Database | Connect external database with AES-256 encrypted credentials |
 | POST | `/api/v1/chat` | Chat | Natural language to SQL query execution pipeline |
 | GET | `/api/v1/datasets/{id}/profile` | Profiling | Compute statistical profiling, missingness, IQR outliers & Health Score |
+| GET | `/api/v1/datasets/{id}/cleaning-suggestions` | Cleaning | Detect data quality issues and suggest one-click fixes |
+| POST | `/api/v1/datasets/{id}/clean` | Cleaning | Execute or preview (dry-run) a guided data cleaning operation |
+| GET | `/api/v1/datasets/{id}/cleaning-history` | Cleaning | Fetch audit log of applied data cleaning actions |
+| GET | `/api/v1/datasets/{id}/eda` | EDA | Fetch Automated EDA report and Gemini AI narrative summary |
+| POST | `/api/v1/datasets/{id}/eda/refresh` | EDA | Force re-compute Automated EDA metrics |
 | POST | `/api/v1/export` | Export | Stream query results in CSV, JSON, XLSX, or Markdown format |
 | GET | `/api/v1/datasets/{id}/forecast` | Forecast | Linear regression & moving average time-series forecasting |
 | GET | `/api/v1/alerts` | Alerts | List all configured metric alert rules |
@@ -244,9 +251,9 @@ AI Data Analyst/
 ## Performance Benchmarks
 
 ### Pytest Unit Test Suite
-- **Total Test Cases**: **37 Passed / 37 Total** (100% Success Rate)
-- **Modules Covered**: 9 Test Modules (`test_profiling.py`, `test_export.py`, `test_forecast.py`, `test_alerts.py`, `test_optimizer.py`, `test_chart_generator.py`, `test_db_introspection.py`, `test_ingestion.py`, `test_sql_validator.py`)
-- **Execution Time**: ~5.72 seconds for complete suite execution
+- **Total Test Cases**: **80 Passed / 80 Total** (100% Success Rate)
+- **Modules Covered**: 14 Test Modules (Including `test_cleaning_actions.py`, `test_cleaning_suggestions.py`, `test_eda_service.py`, `test_eda_narrative.py` and 10 others)
+- **Execution Time**: ~19.5 seconds for complete suite execution
 
 ### SQL Optimization Engine
 - **AST Parse Time**: < 10ms via `sqlglot`
@@ -266,6 +273,12 @@ AI Data Analyst/
 
 ### Data Profiling & Quality Scoring
 The data quality profiler evaluates every column in a dataset, analyzing data types, null counts, missingness percentages, distinct ratios, and min/max/mean/std-dev bounds. For numerical columns, it calculates Interquartile Range (IQR) bounds ($Q1 - 1.5 \times IQR$ and $Q3 + 1.5 \times IQR$) to pinpoint extreme outliers. The overall dataset **Health Score** is derived from a 100-point scale with scaled penalties for missing data, duplicate rows, and extreme outliers.
+
+### Guided Data Cleaning & Preview Engine
+When the profiler detects defects, the Guided Cleaning engine recommends precise operations (e.g., median imputation, z-score winsorization, regex type casting). Before applying changes, it uses a non-destructive dry-run pipeline across in-memory pandas DataFrames to surface a JSON sample diff to the user. Once confirmed, changes are atomically mutated in the database (`to_sql(if_exists="replace")`) and permanently audit-logged.
+
+### Automated Exploratory Data Analysis (EDA)
+The EDA engine automatically identifies relationships across the entire dataset without writing SQL. It computes Pearson correlation matrices, dynamic Freedman-Diaconis histograms for numeric distributions, and value-counts for categorical columns. Highly correlated features are rendered as heavily sampled X/Y scatter plots using Recharts. A Google Gemini AI service ingests these statistics to synthesize a deterministic, grounded executive narrative summarizing the dataset's characteristics.
 
 ### SQL AST Optimization & Transpilation
 Using `sqlglot`, the optimizer parses raw SQL queries into Abstract Syntax Trees (ASTs). It analyzes the tree structure to identify performance bottlenecks—such as unbounded queries missing a `LIMIT` clause, unnecessary `SELECT *` column pulls, or functions applied directly to filtering columns in `WHERE` clauses that prevent B-tree index lookup. It also formats raw queries into clean, standardized SQL and transpiles syntax to target dialects including PostgreSQL, Snowflake, BigQuery, and DuckDB.
