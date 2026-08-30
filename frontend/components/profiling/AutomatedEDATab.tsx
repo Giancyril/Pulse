@@ -23,7 +23,7 @@ export default function AutomatedEDATab({ datasetId }: AutomatedEDATabProps) {
     setError(null);
     try {
       if (forceRefresh) {
-        const res = await api.post<EDAReportResponse>(`/datasets/${datasetId}/eda/refresh`);
+        const res = await api.post<EDAReportResponse>(`/datasets/${datasetId}/eda/refresh`, {});
         setReport(res);
       } else {
         const res = await api.get<EDAReportResponse>(`/datasets/${datasetId}/eda`);
@@ -124,7 +124,7 @@ export default function AutomatedEDATab({ datasetId }: AutomatedEDATabProps) {
               <h4 style={{ fontSize: 15, fontWeight: 600, color: "var(--text-primary)" }}>{cat.column} Breakdown</h4>
             </div>
             <div style={{ height: 200, width: "100%", marginBottom: 12 }}>
-              <ResponsiveContainer layout="vertical">
+              <ResponsiveContainer>
                 <BarChart data={cat.frequencies.slice(0, 5)} layout="vertical" margin={{ left: 40 }}>
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--border)" />
                   <XAxis type="number" tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickLine={false} axisLine={false} hide />
